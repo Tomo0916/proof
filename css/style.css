@@ -1,0 +1,148 @@
+/* カードアニメーション & インタラクション */
+.phrase-card {
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+  touch-action: manipulation;
+}
+
+/* 解答欄内のカードデザイン（カード本体のタップでは消えない。✕ボタンのみで戻す） */
+.drop-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1px solid #c7d2fe;
+  border-left: 4px solid #6366f1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.drop-item:hover {
+  border-color: #818cf8;
+  border-left-color: #6366f1;
+}
+
+/* 並べ替え直後にカードを軽く光らせる */
+.drop-item.just-moved {
+  animation: moved-flash 0.35s ease;
+}
+@keyframes moved-flash {
+  from { background-color: #eef2ff; }
+  to   { background-color: #ffffff; }
+}
+
+/* パレット内のカードデザイン（button 要素） */
+.palette-item {
+  cursor: pointer;
+  text-align: left;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s, transform 0.12s;
+}
+
+.palette-item:hover {
+  border-color: #6366f1;
+  background-color: #f8fafc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.palette-item:active {
+  transform: scale(0.97);
+}
+
+.palette-item:focus-visible,
+.sort-btn:focus-visible,
+.remove-btn:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* 行番号バッジ（解答欄内の順番表示） */
+.step-number {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  background-color: #f1f5f9;
+  border-radius: 9999px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 並べ替えボタン・削除ボタン（スマホで押しやすいサイズ） */
+.sort-btn,
+.remove-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  transition: background-color 0.1s, color 0.1s;
+  touch-action: manipulation;
+}
+
+.sort-btn {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+.sort-btn:hover:not(:disabled) {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+.sort-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.remove-btn {
+  background-color: #fff1f2;
+  color: #f43f5e;
+}
+.remove-btn:hover {
+  background-color: #ffe4e6;
+  color: #e11d48;
+}
+
+/* 解説用バッジ（正解後のフィードバック内でのみ使用） */
+.flow-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.flow-target { background-color: #e0e7ff; color: #3730a3; }
+.flow-fact { background-color: #f1f5f9; color: #334155; }
+.flow-condition { background-color: #fef3c7; color: #92400e; }
+.flow-conclusion { background-color: #dcfce7; color: #166534; }
+
+/* KaTeXのスタイル微調整 */
+.katex {
+  font-size: 1.05em;
+}
+
+/* フィードバック通知 */
+.feedback-success {
+  background-color: #f0fdf4;
+  border-color: #86efac;
+  color: #14532d;
+}
+
+.feedback-warning {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+  color: #78350f;
+}
+
+.feedback-error {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #7f1d1d;
+}
