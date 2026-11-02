@@ -15,6 +15,7 @@
  *                                                // 等しい辺の印と重ならないよう、辺の 35% の位置に描く
  *   labels:    { O: [dx, dy] },                  // ラベル位置を手で調整したいとき
  *   texts:     [{ at: [x, y], text: "ℓ" }]       // 点以外の文字
+ *   highlights: ["AC"]                           // 太い色つきの線で目立たせる辺（共通な辺の説明など）
  * }
  */
 
@@ -36,7 +37,7 @@ export function drawFigure(fig) {
   const {
     width = 220, height = 150, pts, segs = [],
     sides = [], angles = [], rights = [], parallels = [],
-    labels = {}, texts = []
+    labels = {}, texts = [], highlights = []
   } = fig;
 
   const P = name => {
@@ -52,6 +53,14 @@ export function drawFigure(fig) {
     const [x1, y1] = P(a[0]);
     const [x2, y2] = P(a[a.length - 1]);
     out.push(`<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${LINE_COLOR}" stroke-width="2" stroke-linecap="round" />`);
+  });
+
+  // 目立たせる辺（線分の下に太い色の線）
+  highlights.forEach(s => {
+    const [a, b] = toArray(s);
+    const [x1, y1] = P(a);
+    const [x2, y2] = P(b);
+    out.unshift(`<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="#fbbf24" stroke-width="7" stroke-linecap="round" opacity="0.7" />`);
   });
 
   // 等しい辺の印

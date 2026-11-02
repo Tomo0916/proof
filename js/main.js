@@ -288,9 +288,21 @@ function applySavedWork(saved) {
   }
 }
 
-// 前回開いていた単元・問題を開く
+// 前回開いていた単元・問題を開く（URL に ?problem=id があれば、その問題を開く）
 function openSavedPosition() {
   const work = Storage.loadWork();
+  const wanted = allProblems.find(p => p.id === new URLSearchParams(location.search).get("problem"));
+  if (wanted) {
+    history.replaceState(null, "", location.pathname);   // 一度開いたら URL から外す（リロードでは続きから）
+    if (dom.selectScope.value !== "all" && dom.selectScope.value !== wanted.tier) {
+      dom.selectScope.value = "all";
+      Storage.setScope("all");
+    }
+    initUnitSelector();
+    dom.selectUnit.value = "all";
+    filterProblems(wanted.id);
+    return;
+  }
   initUnitSelector();
   if (work.unit && [...dom.selectUnit.options].some(o => o.value === work.unit)) {
     dom.selectUnit.value = work.unit;
@@ -916,6 +928,7 @@ function templateHtml(prob) {
         <h4>合同条件</h4>
         <div class="tpl-chips">${CONDITIONS.map(c => `<span>${c}がそれぞれ等しい</span>`).join("")}</div>
       </div>
+      <a href="reasons.html" target="_blank" rel="noopener" class="text-xs font-bold text-indigo-700 hover:underline">📖 理由カードを図つきでくわしく見る ▶</a>
     </div>`;
 }
 
