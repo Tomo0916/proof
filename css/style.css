@@ -285,3 +285,44 @@
   border-color: #fecaca;
   color: #7f1d1d;
 }
+
+/* ===== ドラッグ ===== */
+.drop-item,
+.palette-item {
+  -webkit-touch-callout: none;
+}
+.drop-item { cursor: grab; }
+body.is-card-dragging,
+body.is-card-dragging * {
+  cursor: grabbing !important;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.phrase-card.is-dragging {
+  opacity: 0.35;
+}
+.drag-ghost {
+  position: fixed;
+  z-index: 100;
+  margin: 0;
+  pointer-events: none;
+  opacity: 0.95;
+  transform: rotate(1.5deg) scale(1.02);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);
+}
+.drop-indicator {
+  height: 3px;
+  margin: -1px 0;
+  border-radius: 2px;
+  background-color: #6366f1;
+  flex-shrink: 0;
+}
+#drop-zone.is-drop-target {
+  background-color: #eef2ff;
+  border-color: #6366f1;
+}
+#palette-zone.is-drop-target {
+  background-color: #fff1f2;
+  outline: 2px dashed #fb7185;
+  outline-offset: -2px;
+}

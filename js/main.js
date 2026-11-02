@@ -1,6 +1,7 @@
 import { allProblems } from "./problems/index.js";
 import { Storage } from "./storage.js";
 import { readEquality, texToPlain, formatPlain } from "./notation.js";
+import { setupCardDrag } from "./drag.js";
 
 // ============================================================
 // 効果音（Web Audio API で生成。外部音声ファイル不要）
@@ -523,6 +524,21 @@ function displayText(piece, index) {
   return piece.text;
 }
 
+// ドラッグで落としたとき
+function handleDrop({ src, index, target, insertAt }) {
+  if (target === "answer") {
+    const from = src === "answer" ? state.answer : state.palette;
+    const [piece] = from.splice(index, 1);
+    state.answer.splice(insertAt, 0, piece);
+    if (src === "answer" && insertAt === index) return renderPieces();   // 動いていない
+    Sound.playClick();
+    state.lastMovedId = piece.id;
+    onAnswerChanged();
+  } else if (target === "palette" && src === "answer") {
+    removePiece(index);
+  }
+}
+
 function onAnswerChanged() {
   hideFeedback(dom.feedbackArea);
   renderPieces();
@@ -568,6 +584,8 @@ function renderPieces() {
     state.answer.forEach((piece, index) => {
       const card = document.createElement("div");
       card.className = "phrase-card drop-item px-3 py-2 rounded-lg text-xs sm:text-sm font-medium";
+      card.dataset.dragSrc = "answer";
+      card.dataset.index = String(index);
       if (piece.id === state.lastMovedId) card.classList.add("just-moved");
       card.innerHTML = `
         <span class="step-number">${index + 1}</span>
@@ -593,6 +611,8 @@ function renderPieces() {
     const card = document.createElement("button");
     card.type = "button";
     card.className = "phrase-card palette-item px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-800";
+    card.dataset.dragSrc = "palette";
+    card.dataset.index = String(index);
     card.innerHTML = `<span>${piece.text}</span>`;
     card.addEventListener("click", () => addPiece(index));
     dom.paletteZone.appendChild(card);
@@ -778,6 +798,7 @@ function initEvents() {
 
   // --- ステップ2 ---
   dom.btnCheck.addEventListener("click", checkStep2);
+  setupCardDrag({ dropZone: dom.dropZone, paletteZone: dom.paletteZone, onDrop: handleDrop });
   dom.btnClear.addEventListener("click", () => {
     Sound.playClick();
     resetStep2();
