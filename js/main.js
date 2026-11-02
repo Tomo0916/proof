@@ -87,7 +87,9 @@ const state = {
 
 const $ = id => document.getElementById(id);
 const dom = {
+  selectScope: $("select-scope"),
   selectUnit: $("select-unit"),
+  probTier: $("prob-tier"),
   selectProblem: $("select-problem"),
   btnPrev: $("btn-prev"),
   btnNext: $("btn-next"),
@@ -194,29 +196,42 @@ function updateSoundUI() {
   dom.btnSoundToggle.setAttribute("aria-pressed", on ? "true" : "false");
 }
 
+// 出題範囲（定期テスト / 発展 / すべて）に入る問題
+function problemsInScope() {
+  const scope = dom.selectScope.value;
+  return scope === "all" ? allProblems : allProblems.filter(p => p.tier === scope);
+}
+
+// 単元の選択肢（選んでいる範囲に問題がある単元だけ）
 function initUnitSelector() {
+  const current = dom.selectUnit.value || "all";
   const units = new Map();
-  allProblems.forEach(p => { if (!units.has(p.unit)) units.set(p.unit, p.unitLabel); });
+  problemsInScope().forEach(p => { if (!units.has(p.unit)) units.set(p.unit, p.unitLabel); });
   let html = '<option value="all">すべての単元</option>';
   units.forEach((label, key) => {
     html += `<option value="${escapeHtml(key)}">${escapeHtml(label)}</option>`;
   });
   dom.selectUnit.innerHTML = html;
+  dom.selectUnit.value = units.has(current) ? current : "all";
 }
 
 // 問題リスト（正解したことがある問題には ✓ をつける）
 function renderProblemOptions() {
   const cleared = Storage.loadData().clearedProblems;
   dom.selectProblem.innerHTML = state.filteredProblems
-    .map((p, i) => `<option value="${i}">${cleared.includes(p.id) ? "✓ " : ""}問${i + 1}: ${escapeHtml(p.title)}</option>`)
+    .map((p, i) => {
+      const mark = cleared.includes(p.id) ? "✓ " : "";
+      const tier = dom.selectScope.value === "all" && p.tier === "advanced" ? "【発展】" : "";
+      return `<option value="${i}">${mark}問${i + 1}: ${tier}${escapeHtml(p.title)}</option>`;
+    })
     .join("");
   dom.selectProblem.value = String(state.index);
 }
 
-function filterProblems(unitKey) {
-  state.filteredProblems = unitKey === "all"
-    ? [...allProblems]
-    : allProblems.filter(p => p.unit === unitKey);
+function filterProblems() {
+  const unitKey = dom.selectUnit.value;
+  const pool = problemsInScope();
+  state.filteredProblems = unitKey === "all" ? [...pool] : pool.filter(p => p.unit === unitKey);
   state.index = 0;
   renderProblemOptions();
   loadProblem(0);
@@ -265,6 +280,10 @@ function loadProblem(index) {
   state.prob = prob;
 
   dom.probBadge.textContent = `レベル ${prob.level}`;
+  const advanced = prob.tier === "advanced";
+  dom.probTier.textContent = advanced ? "発展" : "定期テスト";
+  dom.probTier.className = `tier-badge ${advanced ? "tier-advanced" : "tier-basic"}`;
+  dom.probTier.title = advanced ? "定期テストより難しい問題です" : "定期テストでよく出るレベルの問題です";
   dom.probTag.textContent = prob.unitLabel;
   dom.probTitle.textContent = `問${index + 1}. ${prob.title}`;
   dom.probStatement.innerHTML = prob.statement;
@@ -815,9 +834,15 @@ function initEvents() {
     Sound.playClick();
     loadProblem(Number(e.target.value));
   });
-  dom.selectUnit.addEventListener("change", e => {
+  dom.selectScope.addEventListener("change", e => {
     Sound.playClick();
-    filterProblems(e.target.value);
+    Storage.setScope(e.target.value);
+    initUnitSelector();
+    filterProblems();
+  });
+  dom.selectUnit.addEventListener("change", () => {
+    Sound.playClick();
+    filterProblems();
   });
 
   // --- 音 ---
@@ -850,8 +875,9 @@ function initApp() {
   initEvents();
   updateStatsUI();
   updateSoundUI();
+  dom.selectScope.value = Storage.getScope();
   initUnitSelector();
-  filterProblems("all");
+  filterProblems();
 }
 
 window.addEventListener("DOMContentLoaded", initApp);

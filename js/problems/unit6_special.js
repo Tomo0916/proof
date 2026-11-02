@@ -127,6 +127,7 @@ export const unit6Problems = [
   {
     id: "sq-05",
     unit, unitLabel,
+    tier: "advanced",
     level: "★★★",
     title: "2つの正方形",
     statement: "図で、四角形 $ABCD$ と四角形 $CGFE$ はどちらも正方形である。このとき、$\\triangle BCG \\equiv \\triangle DCE$ であることを証明しなさい。",

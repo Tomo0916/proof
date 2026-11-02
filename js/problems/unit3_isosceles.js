@@ -126,6 +126,7 @@ export const unit3Problems = [
   {
     id: "tri-05",
     unit, unitLabel,
+    tier: "advanced",
     level: "★★★",
     title: "2つの正三角形",
     statement: "図で、3点 $B$, $C$, $D$ は一直線上にあり、$\\triangle ABC$ と $\\triangle ECD$ は正三角形である。このとき、$\\triangle ACD \\equiv \\triangle BCE$ であることを証明しなさい。",
@@ -184,6 +185,7 @@ export const unit3Problems = [
   {
     id: "tri-07",
     unit, unitLabel,
+    tier: "advanced",
     level: "★★★",
     title: "正三角形の3辺上の点",
     statement: "正三角形 $ABC$ の辺 $AB$, $BC$, $CA$ 上に、$AD = BE = CF$ となる点 $D$, $E$, $F$ をとる。このとき、$\\triangle ADF \\equiv \\triangle BED$ であることを証明しなさい。",
@@ -213,6 +215,7 @@ export const unit3Problems = [
   {
     id: "tri-08",
     unit, unitLabel,
+    tier: "advanced",
     level: "★★★",
     title: "底辺の延長上の2点",
     statement: "$AB = AC$ の二等辺三角形 $ABC$ で、辺 $BC$ を両方に延長した直線上に、$BD = CE$ となる点 $D$, $E$ をとる（$D$ は $B$ の側、$E$ は $C$ の側）。このとき、$\\triangle ABD \\equiv \\triangle ACE$ であることを証明しなさい。",

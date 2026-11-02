@@ -60,6 +60,16 @@ export const Storage = {
     safeStore.set(`${STORAGE_PREFIX}sound`, enabled ? "true" : "false");
   },
 
+  // 出題範囲（"basic" 定期テスト / "advanced" 発展 / "all" すべて）。最初は定期テスト
+  getScope() {
+    const v = safeStore.get(`${STORAGE_PREFIX}scope`);
+    return ["basic", "advanced", "all"].includes(v) ? v : "basic";
+  },
+
+  setScope(scope) {
+    safeStore.set(`${STORAGE_PREFIX}scope`, scope);
+  },
+
   _getKey(userId) {
     const user = userId || this.getActiveUser();
     return `${STORAGE_PREFIX}data_${user}`;

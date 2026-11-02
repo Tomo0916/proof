@@ -68,6 +68,7 @@ export const unit4Problems = [
   {
     id: "rt-03",
     unit, unitLabel,
+    tier: "advanced",
     level: "★★★",
     title: "直角二等辺三角形と直線",
     statement: "図で、$\\triangle ABC$ は $\\angle BAC = 90^\\circ$, $AB = AC$ の直角二等辺三角形である。点 $A$ を通る直線 $\\ell$ に、点 $B$, $C$ からそれぞれ垂線 $BD$, $CE$ をひく。このとき、$\\triangle ABD \\equiv \\triangle CAE$ であることを証明しなさい。",

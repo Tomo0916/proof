@@ -4,7 +4,9 @@
  *
  * ── 問題データの書き方 ──
  * id          問題ごとに重ならない名前（学習記録に使うので、あとから変えない）
- * level       "★☆☆" 〜 "★★★"
+ * level       "★☆☆" 〜 "★★★"（同じ区分の中でのむずかしさ）
+ * tier        区分。書かなければ "basic"（定期テストで出るレベル）
+ *             定期テストより難しいもの（角の和・差、長さの引き算、外角などもう一段の推論が要るもの）は "advanced"（発展）
  * figure      図のデータ。書き方は js/figure.js の先頭を参照
  *             → 図・入力ボタンの文字・一直線上の点は、ここから自動で作られます
  * triangles   合同を示す2つの三角形（対応する頂点の順に）
@@ -39,7 +41,12 @@ export const allProblems = [
   ...unit5Problems,
   ...unit6Problems
 ]
-  // 単元の中は、やさしい問題から順に並べる（★の数が同じなら書いた順）
-  .map((p, i) => ({ p, i, stars: (p.level.match(/★/g) || []).length, unit: p.unit }))
-  .sort((a, b) => (a.unit === b.unit ? a.stars - b.stars || a.i - b.i : a.i - b.i))
-  .map(x => prepareProblem(x.p));
+  // 単元の中は「定期テスト → 発展」、その中はやさしい順（★の数が同じなら書いた順）
+  .map((p, i) => ({
+    p, i,
+    unit: p.unit,
+    adv: p.tier === "advanced" ? 1 : 0,
+    stars: (p.level.match(/★/g) || []).length
+  }))
+  .sort((a, b) => (a.unit === b.unit ? a.adv - b.adv || a.stars - b.stars || a.i - b.i : a.i - b.i))
+  .map(x => prepareProblem({ ...x.p, tier: x.p.tier || "basic" }));
