@@ -82,7 +82,9 @@ const state = {
   pieces: [],
   palette: [],
   answer: [],
-  lastMovedId: null
+  lastMovedId: null,
+  solved: false,      // ステップ2に正解したか
+  restoring: false    // 問題を読み込み中（この間は保存しない）
 };
 
 const $ = id => document.getElementById(id);
@@ -230,13 +232,66 @@ function renderProblemOptions() {
   dom.selectProblem.value = String(state.index);
 }
 
-function filterProblems() {
+// preferId を渡すと、その問題を開く（なければ最初の問題）
+function filterProblems(preferId) {
   const unitKey = dom.selectUnit.value;
   const pool = problemsInScope();
   state.filteredProblems = unitKey === "all" ? [...pool] : pool.filter(p => p.unit === unitKey);
-  state.index = 0;
+  const found = state.filteredProblems.findIndex(p => p.id === preferId);
+  state.index = found === -1 ? 0 : found;
   renderProblemOptions();
-  loadProblem(0);
+  loadProblem(state.index);
+}
+
+// ============================================================
+// 途中経過の保存と復元（リロードしても続きから）
+// ============================================================
+function saveWork() {
+  if (state.restoring || !state.prob) return;
+  const work = Storage.loadWork();
+  const s = state.step1;
+  work.unit = dom.selectUnit.value;
+  work.problemId = state.prob.id;
+  work.problems[state.prob.id] = {
+    lines: s.lines,
+    active: s.active,
+    results: s.results,
+    cleared: s.cleared,
+    answer: state.answer.map(p => p.id),
+    palette: state.palette.map(p => p.id),
+    solved: state.solved
+  };
+  Storage.saveWork(work);
+}
+
+function applySavedWork(saved) {
+  const s = state.step1;
+  if (Array.isArray(saved.lines) && saved.lines.length > 0) {
+    s.lines = saved.lines.map(l => String(l).slice(0, MAX_CHARS)).slice(0, MAX_LINES);
+    s.results = Array.isArray(saved.results) ? saved.results.slice(0, s.lines.length) : [];
+    s.active = Math.min(Math.max(0, Number(saved.active) || 0), s.lines.length - 1);
+    s.cleared = Boolean(saved.cleared);
+  }
+  // カードの並び（問題データが変わってカードが合わないときは使わない）
+  const byId = new Map(state.pieces.map(p => [p.id, p]));
+  const answerIds = Array.isArray(saved.answer) ? saved.answer : [];
+  const paletteIds = Array.isArray(saved.palette) ? saved.palette : [];
+  const allIds = [...answerIds, ...paletteIds];
+  if (allIds.length === state.pieces.length && new Set(allIds).size === allIds.length && allIds.every(id => byId.has(id))) {
+    state.answer = answerIds.map(id => byId.get(id));
+    state.palette = paletteIds.map(id => byId.get(id));
+    state.solved = Boolean(saved.solved) && s.cleared;
+  }
+}
+
+// 前回開いていた単元・問題を開く
+function openSavedPosition() {
+  const work = Storage.loadWork();
+  initUnitSelector();
+  if (work.unit && [...dom.selectUnit.options].some(o => o.value === work.unit)) {
+    dom.selectUnit.value = work.unit;
+  }
+  filterProblems(work.problemId);
 }
 
 // ============================================================
@@ -278,6 +333,7 @@ function buildStep1Keys(prob) {
 
 function loadProblem(index) {
   if (index < 0 || index >= state.filteredProblems.length) return;
+  state.restoring = true;
   state.index = index;
   const prob = state.filteredProblems[index];
   state.prob = prob;
@@ -314,9 +370,17 @@ function loadProblem(index) {
   state.pieces = buildPieces(prob);
   resetStep2();
 
+  // 前に途中まで解いていたら、その続きから
+  const saved = Storage.loadWork().problems[prob.id];
+  if (saved) applySavedWork(saved);
+  state.restoring = false;
+
   renderStep1();
   renderStepLock();
+  renderPieces();
+  if (state.solved) showStep2Success({ fromRestore: true });
   renderMath(dom.probStatement, dom.step1Prompt);
+  saveWork();
 }
 
 // ============================================================
@@ -357,6 +421,7 @@ function renderStep1() {
 
   dom.keypadWrap.classList.toggle("hidden", s.cleared);
   dom.step1Status.classList.toggle("hidden", !s.cleared);
+  saveWork();
 }
 
 // 書きかえたら、その行の答え合わせの結果だけを消す（ほかの行の ○ などは残す）
@@ -538,6 +603,7 @@ function resetStep2() {
   state.answer = [];
   state.palette = shuffle(state.pieces);
   state.lastMovedId = null;
+  state.solved = false;
   hideFeedback(dom.feedbackArea);
   renderPieces();
 }
@@ -575,6 +641,7 @@ function handleDrop({ src, index, target, insertAt }) {
 }
 
 function onAnswerChanged() {
+  state.solved = false;
   hideFeedback(dom.feedbackArea);
   renderPieces();
 }
@@ -654,6 +721,7 @@ function renderPieces() {
   });
 
   renderMath(dom.dropZone, dom.paletteZone);
+  saveWork();
 }
 
 function failStep2(type, title, body) {
@@ -738,11 +806,17 @@ function checkStep2() {
   const { counted } = Storage.recordClear(state.prob.id);
   updateStatsUI();
   renderProblemOptions();
+  state.solved = true;
+  saveWork();
+  showStep2Success({ counted });
+}
 
+// 正解の表示（リロード後に復元するときは fromRestore: true）
+function showStep2Success({ counted = true, fromRestore = false } = {}) {
   const hasNext = state.index < state.filteredProblems.length - 1;
   showFeedback(dom.feedbackArea, "success", `
     <div class="font-bold text-base mb-1">🎉 正解！ 証明が書けました。</div>
-    ${counted ? "" : `<p class="text-[11px] text-emerald-700/80 mb-2">※この問題は今日すでに正解しているので、今日の問題数は増えません。</p>`}
+    ${counted || fromRestore ? "" : `<p class="text-[11px] text-emerald-700/80 mb-2">※この問題は今日すでに正解しているので、今日の問題数は増えません。</p>`}
     <p class="text-xs sm:text-sm mb-3">${state.prob.explanation}</p>
     <div class="bg-white/80 p-2.5 rounded-lg border border-emerald-300 text-xs text-slate-700 space-y-1">
       <div class="font-bold text-emerald-900 mb-1">📘 合同の証明の書き方</div>
@@ -786,7 +860,7 @@ function saveProfile() {
   Sound.playClick();
   Storage.setActiveUser(dom.inputProfileId.value.trim() || "guest");
   updateStatsUI();
-  renderProblemOptions();
+  openSavedPosition();
   closeProfileModal();
 }
 
@@ -854,11 +928,11 @@ function initEvents() {
     Sound.playClick();
     Storage.setScope(e.target.value);
     initUnitSelector();
-    filterProblems();
+    filterProblems(state.prob && state.prob.id);   // 今の問題が範囲内なら、そのまま
   });
   dom.selectUnit.addEventListener("change", () => {
     Sound.playClick();
-    filterProblems();
+    filterProblems(state.prob && state.prob.id);
   });
 
   // --- 音 ---
@@ -892,8 +966,7 @@ function initApp() {
   updateStatsUI();
   updateSoundUI();
   dom.selectScope.value = Storage.getScope();
-  initUnitSelector();
-  filterProblems();
+  openSavedPosition();
 }
 
 window.addEventListener("DOMContentLoaded", initApp);

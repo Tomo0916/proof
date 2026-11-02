@@ -70,6 +70,29 @@ export const Storage = {
     safeStore.set(`${STORAGE_PREFIX}scope`, scope);
   },
 
+  /**
+   * 作業の途中経過（リロードしても続きから再開するため）。名前ごとに保存する
+   * { unit, problemId, problems: { [問題id]: { lines, active, results, cleared, answer, palette, solved } } }
+   */
+  loadWork(userId) {
+    const user = userId || this.getActiveUser();
+    try {
+      const work = JSON.parse(safeStore.get(`${STORAGE_PREFIX}work_${user}`));
+      if (work && typeof work === "object") {
+        if (!work.problems || typeof work.problems !== "object") work.problems = {};
+        return work;
+      }
+    } catch {
+      /* 壊れていたら空から */
+    }
+    return { problems: {} };
+  },
+
+  saveWork(work, userId) {
+    const user = userId || this.getActiveUser();
+    safeStore.set(`${STORAGE_PREFIX}work_${user}`, JSON.stringify(work));
+  },
+
   _getKey(userId) {
     const user = userId || this.getActiveUser();
     return `${STORAGE_PREFIX}data_${user}`;
