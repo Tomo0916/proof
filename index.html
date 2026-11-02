@@ -44,6 +44,18 @@
     </div>
   </header>
 
+  <!-- 証明の型（背景タップ・Escで閉じる） -->
+  <div id="template-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="template-title">
+    <div class="bg-white rounded-xl shadow-xl max-w-xl w-full p-4 sm:p-5 my-4">
+      <div class="flex items-start justify-between gap-2 mb-1">
+        <h3 id="template-title" class="text-base font-bold text-slate-800">📋 この問題の証明の型</h3>
+        <button type="button" id="btn-template-close" class="remove-btn shrink-0" aria-label="閉じる">✕</button>
+      </div>
+      <p class="text-[11px] text-slate-500 mb-3">証明は、この順番で書きます。<span class="tpl-blank-sample">（　）</span>の部分を、問題に合わせて考えよう。</p>
+      <div id="template-body"></div>
+    </div>
+  </div>
+
   <!-- 名前の登録（背景タップ・Escで閉じる / Enterで決定） -->
   <div id="profile-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="profile-title">
     <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 space-y-4">
@@ -103,6 +115,9 @@
         <div class="md:col-span-2">
           <h2 id="prob-title" class="font-bold text-sm sm:text-base text-slate-800 mb-2"></h2>
           <div id="prob-statement" class="text-xs sm:text-sm text-slate-700 leading-relaxed"></div>
+          <button type="button" id="btn-template" class="mt-3 inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition">
+            📋 この問題の証明の型を見る
+          </button>
         </div>
         <div id="prob-figure" class="flex justify-center items-center bg-slate-50 p-2 rounded-lg border border-slate-200 min-h-[140px] overflow-hidden"></div>
       </div>

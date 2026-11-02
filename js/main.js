@@ -126,6 +126,10 @@ const dom = {
   userDisplay: $("user-display"),
   btnProfile: $("btn-profile"),
   profileModal: $("profile-modal"),
+  templateModal: $("template-modal"),
+  templateBody: $("template-body"),
+  btnTemplate: $("btn-template"),
+  btnTemplateClose: $("btn-template-close"),
   inputProfileId: $("input-profile-id"),
   btnProfileSave: $("btn-profile-save"),
   btnProfileCancel: $("btn-profile-cancel"),
@@ -841,7 +845,90 @@ function showStep2Success({ counted = true, fromRestore = false } = {}) {
 // 名前の登録
 // ============================================================
 function isModalOpen() {
-  return !dom.profileModal.classList.contains("hidden");
+  return !dom.profileModal.classList.contains("hidden") || !dom.templateModal.classList.contains("hidden");
+}
+
+// ============================================================
+// 証明の型（今の問題に合わせた、穴あきの書き方）
+// ============================================================
+const COMMON_REASONS = [
+  "仮定より、", "対頂角は等しいので、", "平行線の錯角は等しいので、", "平行線の同位角は等しいので、",
+  "共通な辺だから、", "共通な角だから、", "点○は線分○○の中点だから、", "○○は∠○の二等分線だから、",
+  "二等辺三角形の底角は等しいので、", "正三角形の辺（角）はすべて等しいので、",
+  "平行四辺形の向かい合う辺（角）は等しいので、", "平行四辺形の対角線は、それぞれの中点で交わるので、"
+];
+const CONDITIONS = [
+  "3組の辺", "2組の辺とその間の角", "1組の辺とその両端の角",
+  "直角三角形の斜辺と1つの鋭角", "直角三角形の斜辺と他の1辺"
+];
+
+function templateHtml(prob) {
+  const [t1, t2] = prob.triangles;
+  const blank = label => `<span class="tpl-blank">${label}</span>`;
+  let n = 0;
+  const reasonLines = prob.proof.blocks.map((block, i) => {
+    const eqs = block.equations.map(() => {
+      const num = CIRCLED[n] || n + 1;
+      n += 1;
+      return `<div class="tpl-line indent">${blank("等しい辺や角")}<span class="tpl-num">…… ${num}</span></div>`;
+    }).join("");
+    return `<div class="tpl-line">${blank(`理由${prob.proof.blocks.length > 1 ? i + 1 : ""}`)}<span class="text-xs text-slate-500">（〜より、／〜ので、／〜だから、）</span></div>${eqs}`;
+  }).join("");
+  const nums = CIRCLED.slice(0, n).join(", ");
+
+  return `
+    <div class="tpl">
+      <div class="tpl-sec s1">
+        <div class="tpl-tag">1<br>三角形を<br>示す</div>
+        <div class="tpl-body">
+          <div class="tpl-line">$\\triangle ${t1}$ と $\\triangle ${t2}$ において</div>
+          <div class="tpl-note">どの三角形とどの三角形について考えるかを、最初に書きます。</div>
+        </div>
+      </div>
+      <div class="tpl-sec s2">
+        <div class="tpl-tag">2<br>理由と<br>等しい辺・角</div>
+        <div class="tpl-body">
+          ${reasonLines}
+          <div class="tpl-note">理由を書いてから、等しい辺や角を書きます。「=」の左に $\\triangle ${t1}$、右に $\\triangle ${t2}$ の辺や角。この問題では ${n} つ見つけます。</div>
+        </div>
+      </div>
+      <div class="tpl-sec s3">
+        <div class="tpl-tag">3<br>合同条件</div>
+        <div class="tpl-body">
+          <div class="tpl-line"><span class="tpl-num">${nums}より、</span>${blank("合同条件")}がそれぞれ等しいので</div>
+          <div class="tpl-note">見つけた ${nums} をまとめて、どの合同条件にあてはまるかを書きます。</div>
+        </div>
+      </div>
+      <div class="tpl-sec s4">
+        <div class="tpl-tag">4<br>結論</div>
+        <div class="tpl-body">
+          <div class="tpl-line">$\\triangle ${t1} \\equiv \\triangle ${t2}$</div>
+          <div class="tpl-note">最後に、2つの三角形が合同であることを書きます（頂点は対応する順に）。</div>
+        </div>
+      </div>
+    </div>
+    <div class="tpl-hints">
+      <div>
+        <h4>よく使う理由</h4>
+        <div class="tpl-chips">${COMMON_REASONS.map(r => `<span>${r}</span>`).join("")}</div>
+      </div>
+      <div>
+        <h4>合同条件</h4>
+        <div class="tpl-chips">${CONDITIONS.map(c => `<span>${c}がそれぞれ等しい</span>`).join("")}</div>
+      </div>
+    </div>`;
+}
+
+function openTemplateModal() {
+  dom.templateBody.innerHTML = templateHtml(state.prob);
+  dom.templateModal.classList.remove("hidden");
+  renderMath(dom.templateBody);
+  dom.btnTemplateClose.focus();
+}
+
+function closeTemplateModal() {
+  dom.templateModal.classList.add("hidden");
+  dom.btnTemplate.focus();
 }
 
 function openProfileModal() {
@@ -953,8 +1040,17 @@ function initEvents() {
   dom.profileModal.addEventListener("click", e => {
     if (e.target === dom.profileModal) closeProfileModal();
   });
+  // --- 証明の型 ---
+  dom.btnTemplate.addEventListener("click", () => { Sound.playClick(); openTemplateModal(); });
+  dom.btnTemplateClose.addEventListener("click", () => { Sound.playClick(); closeTemplateModal(); });
+  dom.templateModal.addEventListener("click", e => {
+    if (e.target === dom.templateModal) closeTemplateModal();
+  });
+
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape" && isModalOpen()) closeProfileModal();
+    if (e.key !== "Escape") return;
+    if (!dom.templateModal.classList.contains("hidden")) closeTemplateModal();
+    else if (!dom.profileModal.classList.contains("hidden")) closeProfileModal();
   });
 }
 
