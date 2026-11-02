@@ -109,6 +109,145 @@
   color: #e11d48;
 }
 
+/* ===== ステップ見出し ===== */
+.step-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: #6366f1;
+  border-radius: 9999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+#step2.is-locked .step-label {
+  background-color: #94a3b8;
+}
+
+/* ===== ステップ1：式の行 ===== */
+.eq-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.eq-bullet {
+  color: #64748b;
+  font-weight: 700;
+  width: 12px;
+}
+.eq-text {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  text-align: left;
+  padding: 6px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #ffffff;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #0f172a;
+  font-family: "Times New Roman", "Hiragino Mincho ProN", serif;
+  touch-action: manipulation;
+}
+.eq-line.is-active .eq-text {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px #c7d2fe;
+}
+.eq-line.mark-ok .eq-text { border-color: #86efac; background-color: #f0fdf4; }
+.eq-line.mark-ng .eq-text { border-color: #fca5a5; background-color: #fef2f2; }
+.eq-line.mark-extra .eq-text { border-color: #fcd34d; background-color: #fffbeb; }
+.eq-text:disabled { cursor: default; }
+
+.eq-placeholder {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: system-ui, sans-serif;
+  letter-spacing: 0;
+}
+.eq-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background-color: #6366f1;
+  animation: caret-blink 1s steps(1) infinite;
+}
+@keyframes caret-blink {
+  50% { opacity: 0; }
+}
+.eq-mark {
+  width: 24px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+.mark-ok .eq-mark { color: #16a34a; }
+.mark-ng .eq-mark { color: #dc2626; }
+.mark-extra .eq-mark { color: #d97706; }
+.eq-msg {
+  flex-basis: 100%;
+  padding-left: 18px;
+  font-size: 11px;
+  color: #475569;
+}
+.mark-ng .eq-msg { color: #b91c1c; }
+.mark-extra .eq-msg { color: #92400e; }
+
+/* ===== ステップ1：入力ボタン ===== */
+.key {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: "Times New Roman", serif;
+  touch-action: manipulation;
+  transition: background-color 0.1s, transform 0.1s;
+}
+.key:hover { background-color: #f1f5f9; }
+.key:active { transform: scale(0.94); }
+.key-sym {
+  background-color: #eef2ff;
+  border-color: #a5b4fc;
+  color: #3730a3;
+}
+.key-fn {
+  font-size: 12px;
+  font-family: system-ui, sans-serif;
+  color: #475569;
+  background-color: #f8fafc;
+}
+.key:focus-visible,
+.eq-text:focus-visible,
+.eq-del:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+.eq-del {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: #f43f5e;
+  background-color: #fff1f2;
+  font-size: 12px;
+  font-weight: 700;
+}
+.eq-del:hover { background-color: #ffe4e6; }
+
+/* ===== 解答らんの番号（自動でつく①②③） ===== */
+.auto-num {
+  color: #4f46e5;
+  font-weight: 700;
+}
+
 /* 解説用バッジ（正解後のフィードバック内でのみ使用） */
 .flow-badge {
   font-size: 11px;
