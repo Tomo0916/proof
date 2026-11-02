@@ -444,7 +444,7 @@ function checkStep1() {
     found.add(r.key);
     if (s.requiredKeys.includes(r.key)) return { mark: "ok", msg: "" };
     if (s.extraKeys.includes(r.key)) return { mark: "extra", msg: "正しいけれど、この2つの三角形の証明には使いません" };
-    return { mark: "ng", msg: "問題文や図からは、この2つが等しいとはわかりません" };
+    return { mark: "ng", msg: "問題文や図からは、まだこの2つが等しいとは言えません" };
   });
 
   const wrongCount = s.results.filter(r => r && r.mark === "ng").length;
@@ -619,7 +619,7 @@ function checkStep2() {
   const dummyAt = ans.findIndex(p => p.dummy);
   if (dummyAt !== -1) {
     failStep2("error", `${dummyAt + 1}行目のカードは、この証明では使いません`,
-      "問題文や図から本当に言えることか、合同条件が合っているかを確かめましょう。");
+      "問題文や図から本当に言えることか、合同を証明したあとでわかることを先に使っていないか、合同条件が合っているかを確かめましょう。");
     return;
   }
 

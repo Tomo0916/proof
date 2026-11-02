@@ -1,38 +1,23 @@
 /**
- * 単元1: 平行と合同
+ * 単元1: 対頂角・平行線と合同
  * データの書き方は problems/index.js の先頭を参照してください。
  */
+const unit = "parallel";
+const unitLabel = "対頂角・平行線と合同";
+
 export const unit1Problems = [
   {
     id: "cong-01",
-    unit: "parallel_congruence",
-    unitLabel: "平行と合同",
+    unit, unitLabel,
     level: "★☆☆",
-    title: "対頂角を使う証明",
-    statement: "図で、線分 $AB$ と $CD$ の交点を $O$ とする。$AO = BO$, $CO = DO$ ならば $\\triangle AOC \\equiv \\triangle BOD$ であることを証明しなさい。",
-    svg: `
-      <svg width="200" height="130" viewBox="0 0 200 130" class="max-w-full h-auto" role="img" aria-label="線分ABとCDが点Oで交わる図">
-        <line x1="30" y1="25" x2="170" y2="105" stroke="#334155" stroke-width="2" />
-        <line x1="30" y1="105" x2="170" y2="25" stroke="#334155" stroke-width="2" />
-        <line x1="30" y1="25" x2="30" y2="105" stroke="#334155" stroke-width="2" />
-        <line x1="170" y1="25" x2="170" y2="105" stroke="#334155" stroke-width="2" />
-        <!-- AO = BO の印（1本線） -->
-        <line x1="67.5" y1="40.7" x2="62.5" y2="49.3" stroke="#ef4444" stroke-width="2" />
-        <line x1="137.5" y1="80.7" x2="132.5" y2="89.3" stroke="#ef4444" stroke-width="2" />
-        <!-- CO = DO の印（2本線） -->
-        <line x1="64.9" y1="90.8" x2="59.9" y2="82.2" stroke="#2563eb" stroke-width="2" />
-        <line x1="70.1" y1="87.8" x2="65.1" y2="79.2" stroke="#2563eb" stroke-width="2" />
-        <line x1="134.9" y1="50.8" x2="129.9" y2="42.2" stroke="#2563eb" stroke-width="2" />
-        <line x1="140.1" y1="47.8" x2="135.1" y2="39.2" stroke="#2563eb" stroke-width="2" />
-        <text x="18" y="25" font-size="12" fill="#0f172a" font-weight="bold">A</text>
-        <text x="18" y="115" font-size="12" fill="#0f172a" font-weight="bold">C</text>
-        <text x="175" y="25" font-size="12" fill="#0f172a" font-weight="bold">D</text>
-        <text x="175" y="115" font-size="12" fill="#0f172a" font-weight="bold">B</text>
-        <text x="96" y="55" font-size="12" fill="#0f172a" font-weight="bold">O</text>
-      </svg>
-    `,
-    points: ["A", "B", "C", "D", "O"],
-    lines: [["A", "O", "B"], ["C", "O", "D"], ["A", "C"], ["D", "B"]],
+    title: "対頂角を使う",
+    statement: "図で、線分 $AB$ と $CD$ の交点を $O$ とする。$AO = BO$, $CO = DO$ ならば、$\\triangle AOC \\equiv \\triangle BOD$ であることを証明しなさい。",
+    figure: {
+      width: 200, height: 130,
+      pts: { A: [30, 25], C: [30, 105], D: [170, 25], B: [170, 105], O: [100, 65] },
+      segs: ["AOB", "COD", "AC", "DB"],
+      sides: [{ segs: ["AO", "OB"], n: 1 }, { segs: ["CO", "OD"], n: 2 }]
+    },
     triangles: ["AOC", "BOD"],
     proof: {
       blocks: [
@@ -47,36 +32,51 @@ export const unit1Problems = [
       { type: "equation", text: "$AC = BD$" },
       { type: "condition", text: "3組の辺がそれぞれ等しいので" }
     ],
-    explanation: "問題文からわかる2組の辺に加えて、図から「対頂角は等しい」ことに気づけたかがポイントです。2組の辺の「間の角」になっているかも確かめましょう。"
+    explanation: "問題文からわかる2組の辺に加えて、図から「対頂角は等しい」ことに気づけたかがポイントです。その角が2組の辺の「間の角」になっていることも確かめましょう。"
+  },
+  {
+    id: "cong-05",
+    unit, unitLabel,
+    level: "★★☆",
+    title: "平行線の同位角を使う",
+    statement: "図で、3点 $A$, $C$, $E$ は一直線上にある。$AB \\parallel CD$, $AB = CD$, $AC = CE$ のとき、$\\triangle ABC \\equiv \\triangle CDE$ であることを証明しなさい。",
+    figure: {
+      width: 220, height: 145,
+      pts: { A: [30, 120], C: [110, 120], E: [190, 120], B: [60, 35], D: [140, 35] },
+      segs: ["ACE", "AB", "BC", "CD", "DE"],
+      sides: [{ segs: ["AC", "CE"], n: 1 }, { segs: ["AB", "CD"], n: 2 }],
+      parallels: [{ segs: ["AB", "CD"], n: 1 }]
+    },
+    triangles: ["ABC", "CDE"],
+    proof: {
+      blocks: [
+        { reason: "仮定より、", equations: ["$AB = CD$", "$AC = CE$"] },
+        { reason: "$AB \\parallel CD$ より、平行線の同位角は等しいので、", equations: ["$\\angle BAC = \\angle DCE$"] }
+      ],
+      condition: "2組の辺とその間の角がそれぞれ等しいので"
+    },
+    extraTrue: [],
+    dummies: [
+      { type: "reason", text: "平行線の錯角は等しいので、" },
+      { type: "equation", text: "$BC = DE$" },
+      { type: "condition", text: "3組の辺がそれぞれ等しいので" }
+    ],
+    explanation: "平行線があるときは、同位角か錯角が等しくなります。この図では、直線 $AE$ に対して $\\angle BAC$ と $\\angle DCE$ が同じ位置にあるので「同位角」です。$BC = DE$ は合同を証明したあとでわかることなので、ここではまだ使えません。"
   },
   {
     id: "cong-02",
-    unit: "parallel_congruence",
-    unitLabel: "平行と合同",
+    unit, unitLabel,
     level: "★★☆",
-    title: "平行線の錯角を使う証明",
+    title: "平行線の錯角を使う",
     statement: "図で、線分 $AC$ と $BD$ の交点を $O$ とする。$AB \\parallel DC$, $AB = CD$ のとき、$\\triangle ABO \\equiv \\triangle CDO$ であることを証明しなさい。",
-    svg: `
-      <svg width="220" height="125" viewBox="0 0 220 125" class="max-w-full h-auto" role="img" aria-label="平行な線分ABとDCを、線分ACとBDが点Oで結ぶ図">
-        <line x1="30" y1="30" x2="150" y2="30" stroke="#334155" stroke-width="2" />
-        <line x1="70" y1="105" x2="190" y2="105" stroke="#334155" stroke-width="2" />
-        <line x1="30" y1="30" x2="190" y2="105" stroke="#334155" stroke-width="2" />
-        <line x1="150" y1="30" x2="70" y2="105" stroke="#334155" stroke-width="2" />
-        <!-- 平行の印（矢印） -->
-        <path d="M56,26 L62,30 L56,34" fill="none" stroke="#16a34a" stroke-width="2" />
-        <path d="M96,101 L102,105 L96,109" fill="none" stroke="#16a34a" stroke-width="2" />
-        <!-- AB = CD の印 -->
-        <line x1="90" y1="25" x2="90" y2="35" stroke="#ef4444" stroke-width="2" />
-        <line x1="130" y1="100" x2="130" y2="110" stroke="#ef4444" stroke-width="2" />
-        <text x="18" y="34" font-size="12" fill="#0f172a" font-weight="bold">A</text>
-        <text x="156" y="34" font-size="12" fill="#0f172a" font-weight="bold">B</text>
-        <text x="194" y="116" font-size="12" fill="#0f172a" font-weight="bold">C</text>
-        <text x="58" y="116" font-size="12" fill="#0f172a" font-weight="bold">D</text>
-        <text x="106" y="57" font-size="12" fill="#0f172a" font-weight="bold">O</text>
-      </svg>
-    `,
-    points: ["A", "B", "C", "D", "O"],
-    lines: [["A", "O", "C"], ["B", "O", "D"], ["A", "B"], ["D", "C"]],
+    figure: {
+      width: 220, height: 130,
+      pts: { A: [30, 30], B: [150, 30], C: [190, 105], D: [70, 105], O: [110, 67.5] },
+      segs: ["AB", "DC", "AOC", "BOD"],
+      sides: [{ segs: ["AB", "DC"], n: 1 }],
+      parallels: [{ segs: ["AB", "DC"], n: 1 }],
+      labels: { O: [0, -13] }
+    },
     triangles: ["ABO", "CDO"],
     proof: {
       blocks: [
@@ -92,5 +92,35 @@ export const unit1Problems = [
       { type: "condition", text: "2組の辺とその間の角がそれぞれ等しいので" }
     ],
     explanation: "平行線があるときは「錯角は等しい」を使います。辺 $AB$, $CD$ の両はしの角が等しいので、「1組の辺とその両端の角」が使えます。$AO = CO$ は、合同を証明したあとでわかることなので、ここではまだ使えません。"
+  },
+  {
+    id: "cong-06",
+    unit, unitLabel,
+    level: "★★☆",
+    title: "中点・錯角・対頂角を組み合わせる",
+    statement: "図で、線分 $AD$ と $BC$ の交点を $O$ とする。$AB \\parallel CD$ で、$O$ が線分 $AD$ の中点のとき、$\\triangle ABO \\equiv \\triangle DCO$ であることを証明しなさい。",
+    figure: {
+      width: 220, height: 145,
+      pts: { A: [40, 30], B: [140, 30], D: [180, 120], C: [80, 120], O: [110, 75] },
+      segs: ["AB", "CD", "AOD", "BOC"],
+      sides: [{ segs: ["AO", "OD"], n: 1 }],
+      parallels: [{ segs: ["AB", "CD"], n: 1 }]
+    },
+    triangles: ["ABO", "DCO"],
+    proof: {
+      blocks: [
+        { reason: "$O$ は線分 $AD$ の中点だから、", equations: ["$AO = DO$"] },
+        { reason: "$AB \\parallel CD$ より、平行線の錯角は等しいので、", equations: ["$\\angle BAO = \\angle CDO$"] },
+        { reason: "対頂角は等しいので、", equations: ["$\\angle AOB = \\angle DOC$"] }
+      ],
+      condition: "1組の辺とその両端の角がそれぞれ等しいので"
+    },
+    extraTrue: ["∠ABO=∠DCO"],
+    dummies: [
+      { type: "reason", text: "平行線の同位角は等しいので、" },
+      { type: "equation", text: "$AB = DC$" },
+      { type: "condition", text: "2組の辺とその間の角がそれぞれ等しいので" }
+    ],
+    explanation: "中点から1組の辺、錯角と対頂角から2組の角がわかります。辺 $AO$, $DO$ の両はしにある角（頂点 $A$ と $D$、頂点 $O$）を選ぶのがポイントです。$\\angle ABO = \\angle DCO$ も正しいですが、辺 $AO$ の両はしの角ではないので、この証明では使いません。"
   }
 ];

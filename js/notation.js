@@ -12,7 +12,11 @@
 
 /** 問題データの KaTeX 表記（例: "$\\angle AOC = \\angle BOD$"）を "∠AOC=∠BOD" に直す */
 export function texToPlain(tex) {
-  return tex.replace(/\$/g, "").replace(/\\angle/g, "∠").replace(/\s+/g, "");
+  return tex
+    .replace(/\$/g, "")
+    .replace(/\\angle/g, "∠")
+    .replace(/\s+/g, "")
+    .replace(/=\d+\^\\circ$/, "");   // 「∠A = ∠B = 90°」の「= 90°」は比べるときに使わない
 }
 
 /** 画面表示用に「=」の前後へすき間を入れる */
