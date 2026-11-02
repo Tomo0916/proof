@@ -9,6 +9,7 @@
  *                                  // ここに書いた並びが、∠BAO と ∠BAC を同じ角と判定するのにも使われる
  *   sides:     [{ segs: ["AO", "BO"], n: 1 }],   // 等しい辺の印（n 本線）
  *   angles:    [{ angs: ["BAD", "CAD"], n: 1 }], // 等しい角の印（n 重の弧）。真ん中の文字が頂点
+ *                                                // r で弧の半径を変えられる（同じ頂点に印が重なるとき）
  *   rights:    ["ADB"],                          // 直角の印。真ん中の文字が頂点
  *   parallels: [{ segs: ["AB", "DC"], n: 1 }],   // 平行の印（矢印 n 個。1文字目→2文字目の向き）
  *                                                // 等しい辺の印と重ならないよう、辺の 35% の位置に描く
@@ -89,7 +90,7 @@ export function drawFigure(fig) {
       const sweep = delta > 0 ? 1 : 0;
       // 隣り合う角の印がつながって見えないように、両はしを少しあける
       for (let i = 0; i < n; i++) {
-        const r = 16 + i * 4;
+        const r = (group.r || 16) + i * 4;
         const gap = Math.sign(delta) * Math.min(3.5 / r, Math.abs(delta) / 4);
         const b1 = a1 + gap;
         const b2 = a2 - gap;

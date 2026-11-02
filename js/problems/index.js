@@ -29,11 +29,17 @@ import { unit2Problems } from "./unit2_common.js";
 import { unit3Problems } from "./unit3_isosceles.js";
 import { unit4Problems } from "./unit4_right.js";
 import { unit5Problems } from "./unit5_parallelogram.js";
+import { unit6Problems } from "./unit6_special.js";
 
 export const allProblems = [
   ...unit1Problems,
   ...unit2Problems,
   ...unit3Problems,
   ...unit4Problems,
-  ...unit5Problems
-].map(prepareProblem);
+  ...unit5Problems,
+  ...unit6Problems
+]
+  // 単元の中は、やさしい問題から順に並べる（★の数が同じなら書いた順）
+  .map((p, i) => ({ p, i, stars: (p.level.match(/★/g) || []).length, unit: p.unit }))
+  .sort((a, b) => (a.unit === b.unit ? a.stars - b.stars || a.i - b.i : a.i - b.i))
+  .map(x => prepareProblem(x.p));

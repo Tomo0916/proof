@@ -94,5 +94,95 @@ export const unit5Problems = [
       { type: "condition", text: "2組の辺とその間の角がそれぞれ等しいので" }
     ],
     explanation: "平行四辺形の性質「対角線はそれぞれの中点で交わる」から $AO = CO$ がわかります。さらに錯角と対頂角で、辺 $AO$, $CO$ の両はしの角がそろいます。$AE = CF$ は合同を証明したあとでわかることです。"
+  },
+  {
+    id: "pg-04",
+    unit, unitLabel,
+    level: "★★☆",
+    title: "向かい合う辺の上の2点",
+    statement: "平行四辺形 $ABCD$ の辺 $AD$, $BC$ 上に、$AE = CF$ となる点 $E$, $F$ をとる。このとき、$\\triangle ABE \\equiv \\triangle CDF$ であることを証明しなさい。",
+    figure: {
+      width: 240, height: 150,
+      pts: { A: [60, 30], B: [30, 120], C: [190, 120], D: [220, 30], E: [110, 30], F: [140, 120] },
+      segs: ["AED", "BFC", "AB", "CD", "BE", "DF"],
+      sides: [{ segs: ["AE", "FC"], n: 1 }],
+      parallels: [{ segs: ["BA", "CD"], n: 1 }, { segs: ["AD", "BC"], n: 2 }]
+    },
+    triangles: ["ABE", "CDF"],
+    proof: {
+      blocks: [
+        { reason: "平行四辺形の向かい合う辺は等しいので、", equations: ["$AB = CD$"] },
+        { reason: "仮定より、", equations: ["$AE = CF$"] },
+        { reason: "平行四辺形の向かい合う角は等しいので、", equations: ["$\\angle BAE = \\angle DCF$"] }
+      ],
+      condition: "2組の辺とその間の角がそれぞれ等しいので"
+    },
+    extraTrue: ["AD=BC", "∠ABC=∠CDA"],
+    dummies: [
+      { type: "reason", text: "対頂角は等しいので、" },
+      { type: "equation", text: "$BE = DF$" },
+      { type: "condition", text: "3組の辺がそれぞれ等しいので" }
+    ],
+    explanation: "平行四辺形の性質「向かい合う辺は等しい」「向かい合う角は等しい」を使います。$\\angle BAE$ は $\\angle BAD$ と、$\\angle DCF$ は $\\angle DCB$ と同じ角です。"
+  },
+  {
+    id: "pg-05",
+    unit, unitLabel,
+    level: "★★☆",
+    title: "向かい合う辺の中点",
+    statement: "平行四辺形 $ABCD$ の辺 $AB$, $CD$ の中点をそれぞれ $M$, $N$ とする。このとき、$\\triangle AMD \\equiv \\triangle CNB$ であることを証明しなさい。",
+    figure: {
+      width: 240, height: 150,
+      pts: { A: [60, 30], B: [30, 120], C: [190, 120], D: [220, 30], M: [45, 75], N: [205, 75] },
+      segs: ["AMB", "BC", "CND", "DA", "MD", "NB"],
+      sides: [{ segs: ["AM", "MB", "CN", "ND"], n: 1 }],
+      parallels: [{ segs: ["AD", "BC"], n: 2 }]
+    },
+    triangles: ["AMD", "CNB"],
+    proof: {
+      blocks: [
+        { reason: "平行四辺形の向かい合う辺 $AB$, $CD$ は等しく、$M$, $N$ はそれぞれの中点だから、", equations: ["$AM = CN$"] },
+        { reason: "平行四辺形の向かい合う辺は等しいので、", equations: ["$AD = CB$"] },
+        { reason: "平行四辺形の向かい合う角は等しいので、", equations: ["$\\angle MAD = \\angle NCB$"] }
+      ],
+      condition: "2組の辺とその間の角がそれぞれ等しいので"
+    },
+    extraTrue: ["AB=CD", "∠ABC=∠CDA"],
+    dummies: [
+      { type: "reason", text: "対頂角は等しいので、" },
+      { type: "equation", text: "$MD = NB$" },
+      { type: "condition", text: "1組の辺とその両端の角がそれぞれ等しいので" }
+    ],
+    explanation: "向かい合う辺 $AB$, $CD$ が等しいので、その半分の $AM$, $CN$ も等しくなります。$\\triangle AMD$ と $\\triangle CNB$ の頂点の対応（$A$ と $C$、$M$ と $N$、$D$ と $B$）を図で確かめましょう。"
+  },
+  {
+    id: "pg-06",
+    unit, unitLabel,
+    level: "★★★",
+    title: "対角線への2本の垂線",
+    statement: "平行四辺形 $ABCD$ の頂点 $A$, $C$ から、対角線 $BD$ にそれぞれ垂線 $AE$, $CF$ をひく。このとき、$\\triangle ABE \\equiv \\triangle CDF$ であることを証明しなさい。",
+    figure: {
+      width: 240, height: 150,
+      pts: { A: [60, 30], B: [30, 120], C: [190, 120], D: [220, 30], E: [89.3, 91.9], F: [160.7, 58.1] },
+      segs: ["AB", "BC", "CD", "DA", "BEFD", "AE", "CF"],
+      rights: ["AEB", "CFD"],
+      parallels: [{ segs: ["BA", "CD"], n: 1 }, { segs: ["AD", "BC"], n: 2 }]
+    },
+    triangles: ["ABE", "CDF"],
+    proof: {
+      blocks: [
+        { reason: "仮定より、", equations: ["$\\angle AEB = \\angle CFD = 90^\\circ$"] },
+        { reason: "平行四辺形の向かい合う辺は等しいので、", equations: ["$AB = CD$"] },
+        { reason: "$AB \\parallel DC$ より、錯角は等しいので、", equations: ["$\\angle ABE = \\angle CDF$"] }
+      ],
+      condition: "直角三角形の斜辺と1つの鋭角がそれぞれ等しいので"
+    },
+    extraTrue: ["AD=BC"],
+    dummies: [
+      { type: "reason", text: "対頂角は等しいので、" },
+      { type: "equation", text: "$AE = CF$" },
+      { type: "condition", text: "2組の辺とその間の角がそれぞれ等しいので" }
+    ],
+    explanation: "垂線が出てきたら直角三角形の合同条件を考えます。$AB$, $CD$ はそれぞれの直角三角形の斜辺で、錯角から鋭角も等しくなります。この合同から $AE = CF$ がわかります。"
   }
 ];

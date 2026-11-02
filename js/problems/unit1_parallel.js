@@ -122,5 +122,35 @@ export const unit1Problems = [
       { type: "condition", text: "2組の辺とその間の角がそれぞれ等しいので" }
     ],
     explanation: "中点から1組の辺、錯角と対頂角から2組の角がわかります。辺 $AO$, $DO$ の両はしにある角（頂点 $A$ と $D$、頂点 $O$）を選ぶのがポイントです。$\\angle ABO = \\angle DCO$ も正しいですが、辺 $AO$ の両はしの角ではないので、この証明では使いません。"
+  },
+  {
+    id: "cong-07",
+    unit, unitLabel,
+    level: "★★☆",
+    title: "2組の平行線と同位角",
+    statement: "図で、3点 $A$, $C$, $E$ は一直線上にある。$AB \\parallel CD$, $BC \\parallel DE$, $AC = CE$ のとき、$\\triangle ABC \\equiv \\triangle CDE$ であることを証明しなさい。",
+    figure: {
+      width: 220, height: 145,
+      pts: { A: [25, 125], C: [105, 125], E: [185, 125], B: [55, 40], D: [135, 40] },
+      segs: ["ACE", "AB", "BC", "CD", "DE"],
+      sides: [{ segs: ["AC", "CE"], n: 1 }],
+      parallels: [{ segs: ["AB", "CD"], n: 1 }, { segs: ["CB", "ED"], n: 2 }]
+    },
+    triangles: ["ABC", "CDE"],
+    proof: {
+      blocks: [
+        { reason: "仮定より、", equations: ["$AC = CE$"] },
+        { reason: "$AB \\parallel CD$ より、平行線の同位角は等しいので、", equations: ["$\\angle BAC = \\angle DCE$"] },
+        { reason: "$BC \\parallel DE$ より、平行線の同位角は等しいので、", equations: ["$\\angle BCA = \\angle DEC$"] }
+      ],
+      condition: "1組の辺とその両端の角がそれぞれ等しいので"
+    },
+    extraTrue: [],
+    dummies: [
+      { type: "reason", text: "対頂角は等しいので、" },
+      { type: "equation", text: "$AB = CD$" },
+      { type: "condition", text: "2組の辺とその間の角がそれぞれ等しいので" }
+    ],
+    explanation: "平行線が2組あるので、同位角も2組できます。辺 $AC$, $CE$ の両はしの角がそろうので「1組の辺とその両端の角」が使えます。"
   }
 ];
