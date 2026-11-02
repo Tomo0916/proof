@@ -71,7 +71,7 @@ const state = {
   step1: {
     lines: [""],
     active: 0,
-    results: null,   // 答え合わせ後の各行の判定
+    results: [],     // 答え合わせ後の各行の判定（lines と同じ並び。未判定は null）
     cleared: false,
     requiredKeys: [],
     extraKeys: []
@@ -279,7 +279,7 @@ function loadProblem(index) {
   Object.assign(state.step1, {
     lines: [""],
     active: 0,
-    results: null,
+    results: [],
     cleared: false,
     requiredKeys: keys.required,
     extraKeys: keys.extra
@@ -336,9 +336,8 @@ function renderStep1() {
   dom.step1Status.classList.toggle("hidden", !s.cleared);
 }
 
-// 書きかえたら、前の答え合わせの結果は消す
+// 書きかえたら、その行の答え合わせの結果だけを消す（ほかの行の ○ などは残す）
 function onStep1Edited() {
-  state.step1.results = null;
   hideFeedback(dom.step1Feedback);
   renderStep1();
 }
@@ -349,6 +348,7 @@ function typeChar(ch) {
   if (s.lines[s.active].length >= MAX_CHARS) return;
   Sound.playClick();
   s.lines[s.active] += ch;
+  s.results[s.active] = null;
   onStep1Edited();
 }
 
@@ -358,9 +358,11 @@ function backspace() {
   Sound.playClick();
   if (s.lines[s.active] === "" && s.lines.length > 1) {
     s.lines.splice(s.active, 1);
+    s.results.splice(s.active, 1);
     s.active = Math.max(0, s.active - 1);
   } else {
     s.lines[s.active] = s.lines[s.active].slice(0, -1);
+    s.results[s.active] = null;
   }
   onStep1Edited();
 }
@@ -375,6 +377,7 @@ function newLine() {
   }
   Sound.playClick();
   s.lines.splice(s.active + 1, 0, "");
+  s.results.splice(s.active + 1, 0, null);
   s.active += 1;
   onStep1Edited();
 }
@@ -384,6 +387,7 @@ function deleteLine(i) {
   if (s.cleared || s.lines.length <= 1) return;
   Sound.playClick();
   s.lines.splice(i, 1);
+  s.results.splice(i, 1);
   if (s.active >= s.lines.length) s.active = s.lines.length - 1;
   else if (s.active > i) s.active -= 1;
   onStep1Edited();
@@ -401,8 +405,24 @@ function resetStep1() {
   if (s.cleared) return;
   Sound.playClick();
   s.lines = [""];
+  s.results = [];
   s.active = 0;
   onStep1Edited();
+}
+
+// 答え合わせで今の行が認められたら（○ か △）、自動で次の空いた行へ移る
+function moveToNextEmptyLine() {
+  const s = state.step1;
+  const r = s.results[s.active];
+  if (!r || r.mark === "ng") return;          // × の行は直せるようにそのまま
+  let next = s.lines.findIndex(l => l.trim() === "");
+  if (next === -1) {
+    if (s.lines.length >= MAX_LINES) return;
+    s.lines.push("");
+    s.results.push(null);
+    next = s.lines.length - 1;
+  }
+  s.active = next;
 }
 
 function checkStep1() {
@@ -444,6 +464,7 @@ function checkStep1() {
   }
 
   Sound.playNotice();
+  moveToNextEmptyLine();
   renderStep1();
   if (wrongCount > 0) {
     showFeedback(dom.step1Feedback, "error", feedbackHtml(
