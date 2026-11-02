@@ -142,7 +142,9 @@ function renderMath(...elements) {
         { left: "$$", right: "$$", display: true },
         { left: "$", right: "$", display: false }
       ],
-      throwOnError: false
+      throwOnError: false,
+      // 平行の記号は、教科書と同じ「//」で表示する（KaTeX の \parallel は「∥」になるため）
+      macros: { "\\parallel": "\\mathbin{/\\!/}" }
     });
   });
 }
@@ -263,14 +265,15 @@ function buildPieces(prob) {
 
 // 問題データの等式から、ステップ1の正解（比較用の値）を作る
 function buildStep1Keys(prob) {
-  const toKey = text => {
+  const read = text => {
     const r = readEquality(text, prob);
     if (!r.key) console.warn(`[問題データ ${prob.id}] 読み取れない式があります: ${text}`, r.error);
-    return r.key;
+    return r.key ? r : null;
   };
-  const required = prob.proof.blocks.flatMap(b => b.equations).map(tex => toKey(texToPlain(tex)));
-  const extra = (prob.extraTrue || []).map(toKey);
-  return { required: required.filter(Boolean), extra: extra.filter(Boolean) };
+  // 正解の式。左側が1つ目の三角形、右側が2つ目の三角形（データの書き方どおり）
+  const required = prob.proof.blocks.flatMap(b => b.equations).map(tex => read(texToPlain(tex))).filter(Boolean);
+  const extra = (prob.extraTrue || []).map(read).filter(Boolean).map(r => r.key);
+  return { required, extra };
 }
 
 function loadProblem(index) {
@@ -294,7 +297,7 @@ function loadProblem(index) {
 
   // ステップ1の準備
   const [t1, t2] = prob.triangles;
-  dom.step1Prompt.innerHTML = `$\\triangle ${t1}$ と $\\triangle ${t2}$ で、等しいとわかる辺や角を、記号を使ってすべて書き出しましょう。問題文に書いてあることだけでなく、図からわかることも探してみよう。`;
+  dom.step1Prompt.innerHTML = `$\\triangle ${t1}$ と $\\triangle ${t2}$ で、等しいとわかる辺や角を、記号を使ってすべて書き出しましょう。「=」の左に $\\triangle ${t1}$ の辺や角、右に $\\triangle ${t2}$ の辺や角を書きます。問題文に書いてあることだけでなく、図からわかることも探してみよう。`;
   const keys = buildStep1Keys(prob);
   Object.assign(state.step1, {
     lines: [""],
@@ -461,14 +464,27 @@ function checkStep1() {
     if (r.empty) return null;
     if (r.error) return { mark: "ng", msg: r.error };
     if (found.has(r.key)) return { mark: "ng", msg: "同じことを2回書いています" };
+    const req = s.requiredKeys.find(k => k.key === r.key);
+    if (req) {
+      // 左右の順番：左に1つ目の三角形、右に2つ目の三角形の辺・角（共通な辺・角は左右が同じなので対象外）
+      if (r.left !== r.right && r.left !== req.left) {
+        const [t1, t2] = state.prob.triangles;
+        const what = r.kind === "angle" ? "角" : "辺";
+        return {
+          mark: "ng",
+          msg: `左右が逆です。「△${t1} と △${t2} において」なので、左に △${t1} の${what}、右に △${t2} の${what}を書きます`
+        };
+      }
+      found.add(r.key);
+      return { mark: "ok", msg: "" };
+    }
     found.add(r.key);
-    if (s.requiredKeys.includes(r.key)) return { mark: "ok", msg: "" };
     if (s.extraKeys.includes(r.key)) return { mark: "extra", msg: "正しいけれど、この2つの三角形の証明には使いません" };
     return { mark: "ng", msg: "問題文や図からは、まだこの2つが等しいとは言えません" };
   });
 
   const wrongCount = s.results.filter(r => r && r.mark === "ng").length;
-  const missing = s.requiredKeys.filter(k => !found.has(k)).length;
+  const missing = s.requiredKeys.filter(k => !found.has(k.key)).length;
 
   if (wrongCount === 0 && missing === 0) {
     s.cleared = true;

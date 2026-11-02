@@ -73,8 +73,9 @@ function readSide(str, problem) {
 
 /**
  * 1行分の式を読み取る
- * @returns {{empty:true} | {error:string} | {key:string}}
- *   key は「同じ意味の式なら同じ文字列」になる比較用の値
+ * @returns {{empty:true} | {error:string} | {key:string, left:string, right:string, kind:string}}
+ *   key は「同じ意味の式なら同じ文字列」になる比較用の値（左右の入れかえは区別しない）
+ *   left / right は左側・右側それぞれの比較用の値（左右の順番を確かめるのに使う）
  */
 export function readEquality(text, problem) {
   const t = text.replace(/\s+/g, "");
@@ -91,5 +92,10 @@ export function readEquality(text, problem) {
   if (right.error) return right;
   if (left.kind !== right.kind) return { error: "辺と角を「=」で結ぶことはできません" };
 
-  return { key: [left.key, right.key].sort().join("=") };
+  return {
+    key: [left.key, right.key].sort().join("="),   // 左右を区別しない比較用
+    left: left.key,                                  // 左側（1つ目の三角形の辺・角）
+    right: right.key,                                // 右側（2つ目の三角形の辺・角）
+    kind: left.kind                                  // "segment"（辺） / "angle"（角）
+  };
 }
