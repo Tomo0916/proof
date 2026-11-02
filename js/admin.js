@@ -6,8 +6,8 @@
 import { allProblems } from "./problems/index.js";
 import { Storage } from "./storage.js";
 import { texToPlain } from "./notation.js";
+import { modelProofLines, shortCondition } from "./proof-text.js";
 
-const CIRCLED = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"];
 const $ = id => document.getElementById(id);
 
 function escapeHtml(str) {
@@ -29,7 +29,6 @@ const userName = id => (id === "guest" ? "ゲスト" : id);
 const tierBadge = (p, small = false) => p.tier === "advanced"
   ? `<span class="tier-badge tier-advanced ${small ? "small" : ""}">発展</span>`
   : `<span class="tier-badge tier-basic ${small ? "small" : ""}">定期テスト</span>`;
-const shortCondition = p => p.proof.condition.replace(/がそれぞれ等しいので$/, "");
 
 // 単元の順番と名前
 const units = [];
@@ -160,23 +159,6 @@ function renderRecords() {
 // ============================================================
 // 問題一覧
 // ============================================================
-function modelProof(p) {
-  const [t1, t2] = p.triangles;
-  const lines = [`$\\triangle ${t1}$ と $\\triangle ${t2}$ において`];
-  const nums = [];
-  p.proof.blocks.forEach(block => {
-    lines.push(block.reason);
-    block.equations.forEach(eq => {
-      const num = CIRCLED[nums.length] || nums.length + 1;
-      nums.push(num);
-      lines.push(`${eq} <span class="auto-num">…… ${num}</span>`);
-    });
-  });
-  lines.push(`<span class="auto-num">${nums.join(", ")}より、</span>${p.proof.condition}`);
-  lines.push(`$\\triangle ${t1} \\equiv \\triangle ${t2}$`);
-  return lines;
-}
-
 const DUMMY_TYPE = { reason: "理由", equation: "等式", condition: "合同条件" };
 
 function detailHtml(p) {
@@ -200,7 +182,7 @@ function detailHtml(p) {
         <div>
           <div class="text-[11px] font-bold text-slate-500 mb-0.5">模範の証明</div>
           <ol class="space-y-0.5 bg-white border border-slate-200 rounded-lg p-2">
-            ${modelProof(p).map((line, i) => `<li class="flex gap-2"><span class="step-number">${i + 1}</span><span>${line}</span></li>`).join("")}
+            ${modelProofLines(p).map((line, i) => `<li class="flex gap-2"><span class="step-number">${i + 1}</span><span>${line}</span></li>`).join("")}
           </ol>
         </div>
         <div>
@@ -218,6 +200,7 @@ function detailHtml(p) {
 }
 
 let openId = null;
+const selected = new Set();   // 印刷するために選んだ問題
 
 function filteredProblems() {
   const tier = $("f-tier").value;
@@ -235,14 +218,16 @@ function filteredProblems() {
 function renderProblems() {
   const list = filteredProblems();
   $("f-count").textContent = `${list.length} / ${allProblems.length} 問`;
+  renderSelection(list);
   if (list.length === 0) {
-    $("problems-body").innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">条件に合う問題がありません。</td></tr>`;
+    $("problems-body").innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400">条件に合う問題がありません。</td></tr>`;
     return;
   }
   $("problems-body").innerHTML = list.map(p => {
     const open = p.id === openId;
     return `
       <tr class="prob-row border-b border-slate-100 ${open ? "is-open" : ""}" data-id="${p.id}">
+        <td class="py-2 pl-1 pr-2"><input type="checkbox" class="sel w-4 h-4 accent-indigo-600 cursor-pointer" data-sel="${p.id}" ${selected.has(p.id) ? "checked" : ""} aria-label="${escapeHtml(p.title)}を印刷に選ぶ"></td>
         <td class="py-2 pr-3 font-mono text-slate-500 whitespace-nowrap">${p.id}</td>
         <td class="py-2 pr-3">${tierBadge(p, true)}</td>
         <td class="py-2 pr-3 whitespace-nowrap">${escapeHtml(p.unitLabel)}</td>
@@ -251,7 +236,7 @@ function renderProblems() {
         <td class="py-2 pr-3">${escapeHtml(shortCondition(p))}</td>
         <td class="py-2 pr-3 text-slate-600">${p.proof.blocks.map(b => b.reason.replace(/、$/, "")).join(" ／ ")}</td>
       </tr>
-      ${open ? `<tr class="border-b border-slate-200 bg-indigo-50/40"><td colspan="7">${detailHtml(p)}</td></tr>` : ""}`;
+      ${open ? `<tr class="border-b border-slate-200 bg-indigo-50/40"><td colspan="8">${detailHtml(p)}</td></tr>` : ""}`;
   }).join("");
   renderMath($("problems-body"));
 }
@@ -265,10 +250,42 @@ function initProblemFilters() {
   ["f-tier", "f-unit", "f-cond"].forEach(id => $(id).addEventListener("change", renderProblems));
   $("f-text").addEventListener("input", renderProblems);
   $("problems-body").addEventListener("click", e => {
+    const box = e.target.closest("[data-sel]");
+    if (box) {
+      if (box.checked) selected.add(box.dataset.sel); else selected.delete(box.dataset.sel);
+      renderSelection(filteredProblems());
+      return;
+    }
     const row = e.target.closest(".prob-row");
     if (!row) return;
     openId = openId === row.dataset.id ? null : row.dataset.id;
     renderProblems();
+  });
+}
+
+// 選んだ問題の数とボタンの状態
+function renderSelection(list) {
+  $("sel-count").textContent = `${selected.size} 問を選択中`;
+  $("btn-print").disabled = selected.size === 0;
+  const allChecked = list.length > 0 && list.every(p => selected.has(p.id));
+  $("sel-all").checked = allChecked;
+  $("sel-all").indeterminate = !allChecked && list.some(p => selected.has(p.id));
+}
+
+function initPrintSelection() {
+  // 表示中の問題をまとめて選ぶ／外す
+  $("sel-all").addEventListener("change", e => {
+    filteredProblems().forEach(p => (e.target.checked ? selected.add(p.id) : selected.delete(p.id)));
+    renderProblems();
+  });
+  $("btn-sel-clear").addEventListener("click", () => {
+    selected.clear();
+    renderProblems();
+  });
+  $("btn-print").addEventListener("click", () => {
+    if (selected.size === 0) return;
+    const ids = allProblems.filter(p => selected.has(p.id)).map(p => p.id);
+    window.open(`print.html?ids=${ids.join(",")}`, "_blank");
   });
 }
 
@@ -295,6 +312,7 @@ function init() {
     }
   });
   initProblemFilters();
+  initPrintSelection();
   renderRecords();
   renderProblems();
   showTab(location.hash.replace("#", ""));

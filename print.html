@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>印刷用プリント | 合同の証明トレーニング</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <style>
+    /* ===== 用紙 ===== */
+    @page { size: A4 portrait; margin: 10mm 12mm; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: #e2e8f0;
+      color: #0f172a;
+      font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+      font-size: 10.5pt;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .katex { font-size: 1.02em; }
+
+    /* ===== 画面上の操作パネル（印刷されない） ===== */
+    .toolbar {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+      padding: 10px 16px;
+      background: #1e293b; color: #fff; font-size: 13px;
+    }
+    .toolbar label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+    .toolbar select { font-size: 13px; padding: 2px 4px; border-radius: 4px; }
+    .toolbar .info { color: #cbd5e1; }
+    .toolbar .spacer { flex: 1; }
+    .toolbar button {
+      font-size: 14px; font-weight: 700; padding: 6px 16px; border: 0; border-radius: 6px; cursor: pointer;
+      background: #10b981; color: #fff;
+    }
+    .toolbar a { color: #cbd5e1; font-size: 12px; }
+    .empty { padding: 60px 16px; text-align: center; color: #475569; }
+
+    /* ===== ページ（A4: 210mm × 297mm） ===== */
+    .sheet {
+      width: 210mm; height: 297mm;
+      margin: 12px auto;
+      padding: 10mm 12mm;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      page-break-after: always; break-after: page;
+    }
+    .sheet:last-child { page-break-after: auto; break-after: auto; }
+    .sheet-head {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      border-bottom: 1.5px solid #0f172a; padding-bottom: 2mm; margin-bottom: 3mm;
+    }
+    .sheet-title { font-size: 13pt; font-weight: 700; }
+    .sheet-title small { font-size: 9pt; font-weight: 400; color: #475569; margin-left: 2mm; }
+    .name-box { font-size: 10pt; white-space: nowrap; }
+    .name-box span { display: inline-block; border-bottom: 1px solid #0f172a; }
+
+    /* ===== 問題 ===== */
+    .questions { flex: 1; display: flex; flex-direction: column; gap: 4mm; min-height: 0; }
+    .q {
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: column;
+      border: 1px solid #94a3b8; border-radius: 2mm; padding: 3mm 4mm;
+    }
+    .q-top { display: flex; gap: 4mm; align-items: flex-start; }
+    .q-text { flex: 1; line-height: 1.65; }
+    .q-no { font-weight: 700; font-size: 11.5pt; margin-right: 2mm; }
+    .q-tag { font-size: 8pt; color: #475569; border: 1px solid #94a3b8; border-radius: 1mm; padding: 0 1.5mm; margin-right: 1.5mm; vertical-align: 1px; }
+    .q-tag.adv { color: #92400e; border-color: #d97706; }
+    .q-fig { flex: 0 0 auto; width: 52mm; }
+    .q-fig svg { width: 100%; height: auto; display: block; }
+    .one-per-page .q-fig { width: 70mm; }
+
+    .box-label { font-size: 9pt; font-weight: 700; color: #334155; margin-top: 2mm; }
+    .box-label small { font-weight: 400; color: #64748b; }
+    .step1-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 5mm; margin-top: 1mm; }
+    .step1-box div { border-bottom: 1px solid #64748b; height: 7mm; }
+    .step1-box div::before { content: "・"; color: #64748b; line-height: 9mm; }
+
+    /* 証明を書く罫線（残りの高さいっぱいまで） */
+    /* 罫線は1本ずつの線として描く（どのプリンターでも消えないように）。入りきらない分は隠れる */
+    .lines { flex: 1; min-height: 20mm; margin-top: 1mm; overflow: hidden; }
+    .lines div { height: 8mm; border-bottom: 0.3mm solid #94a3b8; }
+
+    /* ===== 解答 ===== */
+    /* 解答は高さを決めずに流し込む（入りきらなければ次のページへ続く） */
+    .sheet.flow { height: auto; min-height: 297mm; display: block; overflow: visible; }
+    .answers { column-count: 2; column-gap: 7mm; font-size: 9pt; }
+    .ans { break-inside: avoid; page-break-inside: avoid; margin-bottom: 4mm; padding-bottom: 2mm; border-bottom: 1px dashed #cbd5e1; }
+    .ans-title { font-weight: 700; font-size: 10pt; margin-bottom: 1mm; }
+    .ans-eq { color: #334155; margin-bottom: 1mm; }
+    .ans ol { margin: 0; padding-left: 5mm; line-height: 1.55; }
+    .num { font-weight: 700; }
+
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none; }
+      /* 余白は @page で取るので、ページ自体は余白なし・印刷できる範囲の高さ */
+      .sheet { width: auto; height: 276mm; margin: 0; padding: 0; box-shadow: none; }
+      .sheet.flow { height: auto; min-height: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <strong>🖨️ 印刷用プリント</strong>
+    <span class="info" id="info"></span>
+    <label>1ページに
+      <select id="opt-per">
+        <option value="2">2問（紙を節約）</option>
+        <option value="1">1問（大きく）</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="opt-step1" checked> 「等しい辺や角」の欄</label>
+    <label><input type="checkbox" id="opt-answers" checked> 解答をつける（最後のページ）</label>
+    <label><input type="checkbox" id="opt-name" checked> 名前の欄</label>
+    <span class="spacer"></span>
+    <a href="admin.html#problems">← 問題の選択にもどる</a>
+    <button type="button" id="btn-print">印刷する</button>
+  </div>
+
+  <div id="pages"></div>
+
+  <script type="module" src="js/print.js"></script>
+</body>
+</html>
