@@ -22,6 +22,20 @@ const safeStore = {
     } catch {
       /* 保存できない環境では記録を諦める（アプリは動作を継続） */
     }
+  },
+  remove(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      /* 何もしない */
+    }
+  },
+  keys() {
+    try {
+      return Object.keys(localStorage);
+    } catch {
+      return [];
+    }
   }
 };
 
@@ -86,6 +100,22 @@ export const Storage = {
       /* 壊れていたら空から */
     }
     return { problems: {} };
+  },
+
+  /** この端末に記録がある人の一覧（管理者ページ用） */
+  listUsers() {
+    const users = new Set();
+    safeStore.keys().forEach(k => {
+      const m = k.match(new RegExp(`^${STORAGE_PREFIX}(data|work)_(.+)$`));
+      if (m) users.add(m[2]);
+    });
+    return [...users].sort((a, b) => (a === "guest" ? -1 : b === "guest" ? 1 : a.localeCompare(b, "ja")));
+  },
+
+  /** ある人の学習記録と途中経過を消す（管理者ページ用） */
+  deleteUser(userId) {
+    safeStore.remove(`${STORAGE_PREFIX}data_${userId}`);
+    safeStore.remove(`${STORAGE_PREFIX}work_${userId}`);
   },
 
   saveWork(work, userId) {

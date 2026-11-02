@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理者ページ | 合同の証明トレーニング</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tab-btn[aria-selected="true"] { background: #ffffff; color: #3730a3; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+    .st { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 22px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+    .st-done  { background: #dcfce7; color: #15803d; }
+    .st-step2 { background: #e0e7ff; color: #4338ca; }
+    .st-step1 { background: #fef3c7; color: #b45309; }
+    .st-none  { background: #f1f5f9; color: #cbd5e1; }
+    .matrix th.sticky-col, .matrix td.sticky-col { position: sticky; left: 0; background: #ffffff; z-index: 1; }
+    .matrix tr.unit-row td { background: #f8fafc; }
+    .prob-row { cursor: pointer; }
+    .prob-row:hover td { background: #f8fafc; }
+    .prob-row.is-open td { background: #eef2ff; }
+    .tier-badge.small { font-size: 10px; padding: 1px 6px; }
+    .bar { height: 6px; border-radius: 9999px; background: #e2e8f0; overflow: hidden; }
+    .bar > span { display: block; height: 100%; background: #10b981; }
+    .detail-figure svg { max-width: 100%; height: auto; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <header class="bg-slate-800 text-white shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="text-xl" aria-hidden="true">🗂️</span>
+        <h1 class="text-lg font-bold">管理者ページ</h1>
+        <span class="text-xs text-slate-300">合同の証明トレーニング</span>
+      </div>
+      <a href="index.html" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded font-bold">← アプリに戻る</a>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-5 flex flex-col gap-4">
+
+    <!-- 集計 -->
+    <div id="summary" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+
+    <!-- タブ -->
+    <div class="flex gap-1 bg-slate-200 p-1 rounded-lg w-fit" role="tablist">
+      <button type="button" class="tab-btn px-4 py-1.5 rounded-md text-sm font-bold text-slate-600" data-tab="records" role="tab">学習記録</button>
+      <button type="button" class="tab-btn px-4 py-1.5 rounded-md text-sm font-bold text-slate-600" data-tab="problems" role="tab">問題一覧</button>
+    </div>
+
+    <!-- 学習記録 -->
+    <section id="tab-records" class="flex flex-col gap-4">
+      <p class="text-xs text-slate-500">※ この端末（このブラウザ）に保存されている記録だけが表示されます。ほかの端末の記録は見られません。</p>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <h2 class="text-sm font-bold text-slate-700 mb-3">一人ひとりの記録</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="text-slate-500 border-b border-slate-200">
+              <tr class="text-left">
+                <th class="py-2 pr-3">名前</th>
+                <th class="py-2 pr-3 text-right">今日</th>
+                <th class="py-2 pr-3 text-right">1日の最高</th>
+                <th class="py-2 pr-3 min-w-[140px]">正解した問題</th>
+                <th class="py-2 pr-3 text-right">定期テスト</th>
+                <th class="py-2 pr-3 text-right">発展</th>
+                <th class="py-2 pr-3 text-right">途中</th>
+                <th class="py-2 pr-3">最後に開いた問題</th>
+                <th class="py-2"></th>
+              </tr>
+            </thead>
+            <tbody id="users-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 class="text-sm font-bold text-slate-700">問題ごとの進み具合</h2>
+          <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
+            <span><span class="st st-done">✓</span> 正解</span>
+            <span><span class="st st-step2">2</span> ステップ2の途中</span>
+            <span><span class="st st-step1">1</span> ステップ1の途中</span>
+            <span><span class="st st-none">－</span> まだ</span>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="matrix text-xs border-collapse">
+            <thead id="matrix-head"></thead>
+            <tbody id="matrix-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 問題一覧 -->
+    <section id="tab-problems" class="hidden flex flex-col gap-3">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-3 flex flex-wrap items-center gap-3">
+        <label class="text-xs font-bold text-slate-500">区分:
+          <select id="f-tier" class="ml-1 text-xs border border-slate-300 rounded-md px-2 py-1 bg-slate-50">
+            <option value="all">すべて</option>
+            <option value="basic">定期テスト</option>
+            <option value="advanced">発展</option>
+          </select>
+        </label>
+        <label class="text-xs font-bold text-slate-500">単元:
+          <select id="f-unit" class="ml-1 text-xs border border-slate-300 rounded-md px-2 py-1 bg-slate-50"></select>
+        </label>
+        <label class="text-xs font-bold text-slate-500">合同条件:
+          <select id="f-cond" class="ml-1 text-xs border border-slate-300 rounded-md px-2 py-1 bg-slate-50"></select>
+        </label>
+        <input id="f-text" type="search" placeholder="問題名・問題文で検索" class="text-xs border border-slate-300 rounded-md px-2 py-1 bg-slate-50 flex-1 min-w-[160px]">
+        <span id="f-count" class="text-xs text-slate-500 ml-auto"></span>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 overflow-x-auto">
+        <p class="text-[11px] text-slate-500 mb-2">行をクリックすると、図・模範の証明・使わないカード・解説が見られます。</p>
+        <table class="w-full text-xs">
+          <thead class="text-slate-500 border-b border-slate-200">
+            <tr class="text-left">
+              <th class="py-2 pr-3">ID</th>
+              <th class="py-2 pr-3">区分</th>
+              <th class="py-2 pr-3">単元</th>
+              <th class="py-2 pr-3">レベル</th>
+              <th class="py-2 pr-3">問題名</th>
+              <th class="py-2 pr-3">合同条件</th>
+              <th class="py-2 pr-3">使う理由</th>
+            </tr>
+          </thead>
+          <tbody id="problems-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="text-center py-4 text-xs text-slate-400 border-t bg-white mt-auto">
+    中2数学 合同の証明トレーニング｜管理者ページ
+  </footer>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>
