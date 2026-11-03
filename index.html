@@ -27,6 +27,13 @@
       </div>
 
       <div class="flex items-center gap-2 text-xs">
+        <button id="btn-news" type="button" class="relative p-1.5 bg-indigo-700/80 hover:bg-indigo-800 rounded text-base transition" title="お知らせ（アプリが新しくなったところ）" aria-label="お知らせ">
+          <span aria-hidden="true">🔔</span>
+          <span id="news-dot" class="hidden absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-indigo-600"></span>
+        </button>
+        <button id="btn-feedback" type="button" class="p-1.5 bg-indigo-700/80 hover:bg-indigo-800 rounded text-base transition" title="不具合・要望を送る" aria-label="不具合・要望を送る">
+          <span aria-hidden="true">💬</span>
+        </button>
         <button id="btn-sound-toggle" type="button" class="p-1.5 bg-indigo-700/80 hover:bg-indigo-800 rounded text-base transition" title="音のON/OFF" aria-label="音のON/OFF">
           <span id="sound-icon">🔊</span>
         </button>
@@ -43,6 +50,51 @@
       </div>
     </div>
   </header>
+
+  <!-- お知らせ（背景タップ・Escで閉じる） -->
+  <div id="news-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="news-title">
+    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-4 sm:p-5 my-4">
+      <div class="flex items-start justify-between gap-2 mb-3">
+        <h3 id="news-title" class="text-base font-bold text-slate-800">🔔 お知らせ</h3>
+        <button type="button" id="btn-news-close" class="remove-btn shrink-0" aria-label="閉じる">✕</button>
+      </div>
+      <div id="news-body" class="news-list"></div>
+    </div>
+  </div>
+
+  <!-- 不具合・要望を送る（背景タップ・Escで閉じる） -->
+  <div id="feedback-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
+    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-4 sm:p-5 my-4 space-y-3">
+      <div class="flex items-start justify-between gap-2">
+        <h3 id="feedback-title" class="text-base font-bold text-slate-800">💬 不具合・要望を送る</h3>
+        <button type="button" id="btn-feedback-close" class="remove-btn shrink-0" aria-label="閉じる">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">おかしなところや「こうしてほしい」ということを教えてください。名前は送られません。</p>
+      <div>
+        <div class="text-xs font-bold text-slate-600 mb-1">種類</div>
+        <div id="fb-types" class="flex flex-wrap gap-1.5">
+          <label class="fb-type"><input type="radio" name="fb-type" value="不具合（うまく動かない）" checked> 不具合（うまく動かない）</label>
+          <label class="fb-type"><input type="radio" name="fb-type" value="問題のまちがい"> 問題のまちがい</label>
+          <label class="fb-type"><input type="radio" name="fb-type" value="要望（こうしてほしい）"> 要望（こうしてほしい）</label>
+          <label class="fb-type"><input type="radio" name="fb-type" value="その他"> その他</label>
+        </div>
+      </div>
+      <div>
+        <label for="fb-body" class="text-xs font-bold text-slate-600">内容</label>
+        <textarea id="fb-body" rows="5" maxlength="1000" placeholder="例：問3のステップ1で、AB = CD と書いたのに × になった"
+          class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+      </div>
+      <details class="text-[11px] text-slate-500">
+        <summary class="cursor-pointer">いっしょに送られる情報（開いている問題など）</summary>
+        <pre id="fb-context" class="mt-1 p-2 bg-slate-50 border border-slate-200 rounded whitespace-pre-wrap break-all font-mono text-[10px] text-slate-600"></pre>
+      </details>
+      <div id="fb-message" class="hidden text-xs rounded-lg border p-2.5"></div>
+      <div class="flex flex-wrap justify-end gap-2 pt-1">
+        <button type="button" id="btn-fb-copy" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded border border-slate-300">内容をコピー</button>
+        <button type="button" id="btn-fb-send" class="px-4 py-1.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold disabled:opacity-40 disabled:cursor-not-allowed">送る</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 証明の型（背景タップ・Escで閉じる） -->
   <div id="template-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="template-title">

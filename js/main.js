@@ -2,6 +2,8 @@ import { allProblems } from "./problems/index.js";
 import { Storage } from "./storage.js";
 import { readEquality, texToPlain, formatPlain } from "./notation.js";
 import { setupCardDrag } from "./drag.js";
+import { NEWS, TAG_LABEL } from "./news.js";
+import { FEEDBACK_FORM } from "./config.js";
 
 // ============================================================
 // 効果音（Web Audio API で生成。外部音声ファイル不要）
@@ -127,6 +129,19 @@ const dom = {
   btnProfile: $("btn-profile"),
   profileModal: $("profile-modal"),
   templateModal: $("template-modal"),
+  newsModal: $("news-modal"),
+  newsBody: $("news-body"),
+  newsDot: $("news-dot"),
+  btnNews: $("btn-news"),
+  btnNewsClose: $("btn-news-close"),
+  feedbackModal: $("feedback-modal"),
+  btnFeedback: $("btn-feedback"),
+  btnFeedbackClose: $("btn-feedback-close"),
+  fbBody: $("fb-body"),
+  fbContext: $("fb-context"),
+  fbMessage: $("fb-message"),
+  btnFbSend: $("btn-fb-send"),
+  btnFbCopy: $("btn-fb-copy"),
   templateBody: $("template-body"),
   btnTemplate: $("btn-template"),
   btnTemplateClose: $("btn-template-close"),
@@ -857,7 +872,154 @@ function showStep2Success({ counted = true, fromRestore = false } = {}) {
 // 名前の登録
 // ============================================================
 function isModalOpen() {
-  return !dom.profileModal.classList.contains("hidden") || !dom.templateModal.classList.contains("hidden");
+  return [dom.profileModal, dom.templateModal, dom.newsModal, dom.feedbackModal]
+    .some(m => !m.classList.contains("hidden"));
+}
+
+// ============================================================
+// お知らせ（改善した点）
+// ============================================================
+// まだ読んでいないお知らせの数（はじめて開く人は、いちばん新しい1件だけ）
+function unreadNewsCount() {
+  const seen = Storage.getLastSeenNews();
+  if (!seen) return 1;
+  const i = NEWS.findIndex(n => n.id === seen);
+  return i === -1 ? 1 : i;
+}
+
+function updateNewsDot() {
+  dom.newsDot.classList.toggle("hidden", unreadNewsCount() === 0);
+}
+
+function openNewsModal() {
+  const unread = unreadNewsCount();
+  dom.newsBody.innerHTML = NEWS.map((n, i) => `
+    <article class="news-item ${i < unread ? "is-new" : ""}">
+      <div class="news-head">
+        <span class="news-date">${n.date.replace(/^(\d+)-(\d+)-(\d+)$/, (_, y, m, d) => `${y}年${Number(m)}月${Number(d)}日`)}</span>
+        ${i < unread ? `<span class="news-new">NEW</span>` : ""}
+      </div>
+      <div class="news-title">${n.title}</div>
+      <ul class="mt-1">
+        ${n.items.map(it => `<li><span class="news-tag ${it.tag}">${TAG_LABEL[it.tag] || ""}</span><span>${it.text}</span></li>`).join("")}
+      </ul>
+    </article>`).join("");
+  dom.newsModal.classList.remove("hidden");
+  renderMath(dom.newsBody);
+  Storage.setLastSeenNews(NEWS[0].id);
+  updateNewsDot();
+  dom.btnNewsClose.focus();
+}
+
+function closeNewsModal() {
+  dom.newsModal.classList.add("hidden");
+  dom.btnNews.focus();
+}
+
+// ============================================================
+// 不具合・要望を送る
+// ============================================================
+const feedbackReady = () => Boolean(FEEDBACK_FORM.formId && FEEDBACK_FORM.entries.body);
+
+// いっしょに送る情報（どの問題で、どこまで進んでいたか）
+function feedbackContext() {
+  const p = state.prob;
+  const s = state.step1;
+  const progress = state.solved ? "ステップ2まで正解" : s.cleared ? "ステップ2の途中" : "ステップ1の途中";
+  return [
+    `問題: ${p ? `${p.unitLabel}「${p.title}」(${p.id})` : "なし"}`,
+    `進み具合: ${progress}`,
+    `ステップ1で書いた式: ${s.lines.filter(l => l.trim()).join(" / ") || "なし"}`,
+    `ステップ2の並び: ${state.answer.map(x => x.id).join(", ") || "なし"}`,
+    `範囲・単元: ${dom.selectScope.value} / ${dom.selectUnit.value}`,
+    `アプリの版: ${NEWS[0].id}`,
+    `画面の大きさ: ${window.innerWidth}×${window.innerHeight}`,
+    `ブラウザ: ${navigator.userAgent}`,
+    `日時: ${new Date().toLocaleString("ja-JP")}`
+  ].join("\n");
+}
+
+function feedbackType() {
+  const checked = document.querySelector('input[name="fb-type"]:checked');
+  return checked ? checked.value : "その他";
+}
+
+function showFbMessage(type, html) {
+  const colors = {
+    success: "bg-emerald-50 border-emerald-300 text-emerald-800",
+    warning: "bg-amber-50 border-amber-300 text-amber-800",
+    error: "bg-rose-50 border-rose-300 text-rose-800"
+  };
+  dom.fbMessage.className = `text-xs rounded-lg border p-2.5 ${colors[type]}`;
+  dom.fbMessage.innerHTML = html;
+}
+
+function openFeedbackModal() {
+  dom.fbContext.textContent = feedbackContext();
+  dom.fbMessage.className = "hidden";
+  dom.btnFbSend.disabled = !feedbackReady();
+  dom.btnFbSend.title = feedbackReady() ? "" : "送り先がまだ設定されていません";
+  if (!feedbackReady()) {
+    showFbMessage("warning", "送り先がまだ設定されていないので、今は送れません。「内容をコピー」して、先生に伝えてください。");
+  }
+  dom.feedbackModal.classList.remove("hidden");
+  setTimeout(() => dom.fbBody.focus(), 0);
+}
+
+function closeFeedbackModal() {
+  dom.feedbackModal.classList.add("hidden");
+  dom.btnFeedback.focus();
+}
+
+async function copyFeedback() {
+  const text = `種類: ${feedbackType()}\n内容: ${dom.fbBody.value.trim() || "（なし）"}\n---\n${feedbackContext()}`;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // クリップボードが使えないときは、選んだ状態にしてコピーしてもらう
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch { /* 何もしない */ }
+    ta.remove();
+  }
+  showFbMessage("success", "内容をコピーしました。");
+}
+
+async function sendFeedback() {
+  const body = dom.fbBody.value.trim();
+  if (body.length < 3) {
+    showFbMessage("warning", "どんなことがあったか、「内容」に書いてください。");
+    dom.fbBody.focus();
+    return;
+  }
+  if (!feedbackReady()) return;
+
+  const { formId, entries } = FEEDBACK_FORM;
+  const fields = { [entries.body]: body };
+  if (entries.type) fields[entries.type] = feedbackType();
+  if (entries.context) fields[entries.context] = feedbackContext();
+
+  dom.btnFbSend.disabled = true;
+  dom.btnFbSend.textContent = "送っています…";
+  try {
+    // Google フォームに直接送る（返事は読めないので、届いたかどうかはフォームの回答で確かめる）
+    await fetch(`https://docs.google.com/forms/d/e/${formId}/formResponse`, {
+      method: "POST",
+      mode: "no-cors",
+      body: new URLSearchParams(fields)
+    });
+    Sound.playSuccess();
+    showFbMessage("success", "送りました。教えてくれてありがとう！");
+    dom.fbBody.value = "";
+  } catch {
+    const url = `https://docs.google.com/forms/d/e/${formId}/viewform?usp=pp_url&${new URLSearchParams(fields).toString()}`;
+    showFbMessage("error", `送れませんでした。インターネットにつながっているか確かめてください。<br><a href="${url}" target="_blank" rel="noopener" class="underline font-bold">フォームを開いて送る</a>`);
+  } finally {
+    dom.btnFbSend.disabled = false;
+    dom.btnFbSend.textContent = "送る";
+  }
 }
 
 // ============================================================
@@ -1060,9 +1222,23 @@ function initEvents() {
     if (e.target === dom.templateModal) closeTemplateModal();
   });
 
+  // --- お知らせ ---
+  dom.btnNews.addEventListener("click", () => { Sound.playClick(); openNewsModal(); });
+  dom.btnNewsClose.addEventListener("click", () => { Sound.playClick(); closeNewsModal(); });
+  dom.newsModal.addEventListener("click", e => { if (e.target === dom.newsModal) closeNewsModal(); });
+
+  // --- 不具合・要望 ---
+  dom.btnFeedback.addEventListener("click", () => { Sound.playClick(); openFeedbackModal(); });
+  dom.btnFeedbackClose.addEventListener("click", () => { Sound.playClick(); closeFeedbackModal(); });
+  dom.feedbackModal.addEventListener("click", e => { if (e.target === dom.feedbackModal) closeFeedbackModal(); });
+  dom.btnFbSend.addEventListener("click", sendFeedback);
+  dom.btnFbCopy.addEventListener("click", copyFeedback);
+
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
     if (!dom.templateModal.classList.contains("hidden")) closeTemplateModal();
+    else if (!dom.newsModal.classList.contains("hidden")) closeNewsModal();
+    else if (!dom.feedbackModal.classList.contains("hidden")) closeFeedbackModal();
     else if (!dom.profileModal.classList.contains("hidden")) closeProfileModal();
   });
 }
@@ -1076,6 +1252,7 @@ function initApp() {
   updateSoundUI();
   dom.selectScope.value = Storage.getScope();
   openSavedPosition();
+  updateNewsDot();
 }
 
 window.addEventListener("DOMContentLoaded", initApp);

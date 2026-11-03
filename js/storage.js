@@ -75,6 +75,15 @@ export const Storage = {
   },
 
   // 出題範囲（"basic" 定期テスト / "advanced" 発展 / "all" すべて）。最初は定期テスト
+  // 最後に読んだお知らせの id（端末ごと）
+  getLastSeenNews() {
+    return safeStore.get(`${STORAGE_PREFIX}news_seen`) || "";
+  },
+
+  setLastSeenNews(id) {
+    safeStore.set(`${STORAGE_PREFIX}news_seen`, id);
+  },
+
   getScope() {
     const v = safeStore.get(`${STORAGE_PREFIX}scope`);
     return ["basic", "advanced", "all"].includes(v) ? v : "basic";
