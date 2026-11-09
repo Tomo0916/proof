@@ -1215,6 +1215,12 @@ function initEvents() {
   });
   dom.selectScope.addEventListener("change", e => {
     Sound.playClick();
+    if (e.target.value === "intro") {
+      // 入門編は別のページ。選択は元にもどしておく（戻ってきたときのため）
+      e.target.value = Storage.getScope();
+      location.href = "intro.html";
+      return;
+    }
     Storage.setScope(e.target.value);
     initUnitSelector();
     filterProblems(state.prob && state.prob.id);   // 今の問題が範囲内なら、そのまま

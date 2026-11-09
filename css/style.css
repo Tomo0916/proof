@@ -437,3 +437,100 @@ body.is-card-dragging, body.is-card-dragging * { cursor: grabbing !important; us
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ==========================================================
+   入門編
+   ========================================================== */
+.intro-hero h1 { font-size: 24px; font-weight: 700; letter-spacing: 0.04em; }
+.intro-hero p { font-size: 14px; color: var(--ink-2); line-height: 1.85; margin-top: 6px; }
+.lesson-list { margin-top: 18px; border-top: 1px solid var(--line); }
+.lesson {
+  display: grid; grid-template-columns: 36px minmax(0, 1fr) 16px; gap: 12px; align-items: center;
+  padding: 16px 2px; border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none;
+}
+.lesson:hover { background: var(--navy-faint); }
+.lesson-num {
+  width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  border: 2px solid var(--navy); color: var(--navy); font-size: 16px; font-weight: 700;
+}
+.lesson.is-cleared .lesson-num { background: var(--navy); color: #fff; }
+.lesson-body { display: grid; gap: 3px; min-width: 0; }
+.lesson-title { font-size: 16px; font-weight: 700; }
+.lesson-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.lesson-progress { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); margin-top: 4px; }
+.lesson-progress .ip-bar { flex: 1; max-width: 220px; }
+.lesson.is-cleared .lesson-progress span:last-child { color: var(--ok); font-weight: 700; }
+.lesson-go { color: var(--line-strong); font-size: 22px; }
+.ip-bar { height: 6px; border-radius: 9999px; background: var(--line); overflow: hidden; }
+.ip-bar > span { display: block; height: 100%; background: var(--navy); border-radius: 9999px; transition: width 0.3s; }
+.intro-next { margin-top: 24px; padding: 16px; border-radius: var(--radius); background: var(--ground); display: grid; gap: 12px; }
+.intro-next p { font-size: 13px; color: var(--ink-2); line-height: 1.7; }
+.intro-next.is-ready { background: var(--ok-bg); }
+
+.back-link { display: inline-block; font-size: 13px; font-weight: 700; color: var(--navy); text-decoration: none; padding: 4px 0; }
+.lesson-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 6px 0 8px; }
+.lesson-head h1 { font-size: 21px; font-weight: 700; }
+.lesson-count { font-size: 13px; color: var(--navy); font-weight: 700; white-space: nowrap; }
+.lesson-lead { font-size: 13px; color: var(--ink-2); line-height: 1.7; margin: 10px 0 14px; }
+.level-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+.level-tab {
+  display: grid; gap: 1px; padding: 8px 4px; border-radius: 8px; border: 1px solid var(--line-strong);
+  font-size: 14px; font-weight: 700; color: var(--ink-2); background: var(--paper);
+}
+.level-tab small { font-size: 11px; font-weight: 400; color: var(--muted); }
+.level-tab[aria-selected="true"] { border-color: var(--navy); background: var(--navy); color: #fff; }
+.level-tab[aria-selected="true"] small { color: var(--navy-soft); }
+
+.q-card { padding-top: 14px; border-top: 1px solid var(--line); }
+.q-card .figure { margin-top: 0; }
+.q-statement { font-size: 13px; color: var(--ink-2); line-height: 1.8; margin-top: 10px; }
+.q-prompt { font-size: 16px; font-weight: 700; line-height: 1.75; margin: 14px 0 12px; }
+.choices { display: grid; gap: 8px; }
+.choice {
+  text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line-strong);
+  background: var(--paper); font-size: 15px; line-height: 1.55; color: var(--ink); min-height: 48px;
+}
+.choice:hover:not(:disabled) { border-color: var(--navy); background: var(--navy-faint); }
+.choice.is-picked { border-color: var(--navy); background: var(--navy-faint); box-shadow: inset 0 0 0 1px var(--navy); }
+.choice.is-correct { border-color: var(--ok); background: var(--ok-bg); color: #1f5134; font-weight: 700; }
+.choice.is-wrong { border-color: var(--ng); background: var(--ng-bg); color: #7a1a12; }
+.choice.is-dim { opacity: 0.5; }
+.choice:disabled { cursor: default; }
+
+/* 穴うめ証明：ノートのような証明 */
+.ip-proof {
+  position: relative; margin-top: 14px; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden;
+}
+.ip-proof::before { content: ""; position: absolute; top: 0; bottom: 0; left: 38px; width: 2px; background: var(--navy); opacity: 0.85; }
+.ip-line { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 10px; align-items: center; min-height: 46px; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line); font-size: 15px; line-height: 1.6; }
+.ip-line:last-child { border-bottom: 0; }
+.ip-line.indent .ip-text { padding-left: 1em; }
+.ip-no { justify-self: center; font-size: 12px; font-weight: 700; color: var(--navy); }
+.blank {
+  display: inline-block; padding: 4px 10px; min-height: 34px; border-radius: 8px; line-height: 1.7;
+  border: 1.5px dashed var(--line-strong); background: var(--ground); color: var(--ink); font-size: 14px; text-align: left;
+}
+.blank.is-active { border-style: solid; border-color: var(--navy); background: var(--navy-faint); }
+.blank.is-correct { border-style: solid; border-color: var(--ok); background: var(--ok-bg); }
+.blank.is-wrong { border-style: solid; border-color: var(--ng); background: var(--ng-bg); }
+.blank-name {
+  margin-right: 6px; vertical-align: 1px; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--navy); color: #fff; font-size: 11px; font-weight: 700;
+}
+.fill-options { margin-top: 16px; }
+.fill-options-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+
+/* ガイドつき並べかえ */
+.g-sections { margin-top: 14px; display: grid; gap: 14px; }
+.g-sec-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+.g-slots { display: grid; gap: 6px; }
+.slot {
+  width: 100%; text-align: left; min-height: 48px; padding: 10px 12px; border-radius: 8px;
+  border: 1.5px dashed var(--line-strong); background: var(--paper); font-size: 15px; line-height: 1.55; color: var(--ink);
+}
+.slot.indent { margin-left: 1.2em; width: calc(100% - 1.2em); }
+.slot.is-filled { border-style: solid; border-color: var(--line-strong); }
+.slot.is-selected { border-style: solid; border-color: var(--navy); box-shadow: 0 0 0 3px var(--navy-soft); }
+.slot.is-wrong { border-style: solid; border-color: var(--ng); background: var(--ng-bg); }
+.slot-empty { color: var(--muted); font-size: 13px; }
+.g-cards { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; background: var(--ground); border-radius: var(--radius); }

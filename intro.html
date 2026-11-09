@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <title>入門編 | 合同の証明トレーニング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tw-config.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen flex flex-col">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html" aria-label="問題を解くページへ">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 25 L12 8 L18 25 Z"/><path d="M14 25 L22 8 L28 25 Z" fill="currentColor" fill-opacity="0.15"/></svg></span>
+        <span class="brand-name">入門編</span>
+      </a>
+      <div class="topbar-actions">
+        <a href="index.html" class="top-link">問題を解く</a>
+        <span class="name-btn" title="名前は「問題を解く」ページで登録できます"><span id="user-display">ゲスト</span></span>
+      </div>
+    </div>
+  </header>
+
+  <main id="view" class="page flex-1 w-full pt-5" aria-live="polite"></main>
+
+  <footer class="site-footer">
+    <nav aria-label="ほかのページ">
+      <a href="index.html">問題を解く</a>
+      <a href="phrases.html">証明で使う言葉</a>
+      <a href="reasons.html">理由カードの一覧</a>
+    </nav>
+    中2数学 合同の証明トレーニング
+  </footer>
+
+  <script type="module" src="js/intro.js"></script>
+</body>
+</html>

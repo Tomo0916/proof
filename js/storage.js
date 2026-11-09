@@ -84,6 +84,22 @@ export const Storage = {
     safeStore.set(`${STORAGE_PREFIX}news_seen`, id);
   },
 
+  // 入門編の進み具合（名前ごと）{ [練習のid]: { correct, levels: { 1: n, 2: n, 3: n } } }
+  loadIntro(userId) {
+    const user = userId || this.getActiveUser();
+    try {
+      const data = JSON.parse(safeStore.get(`${STORAGE_PREFIX}intro_${user}`));
+      return data && typeof data === "object" ? data : {};
+    } catch {
+      return {};
+    }
+  },
+
+  saveIntro(data, userId) {
+    const user = userId || this.getActiveUser();
+    safeStore.set(`${STORAGE_PREFIX}intro_${user}`, JSON.stringify(data));
+  },
+
   getScope() {
     const v = safeStore.get(`${STORAGE_PREFIX}scope`);
     return ["basic", "advanced", "all"].includes(v) ? v : "basic";
@@ -115,7 +131,7 @@ export const Storage = {
   listUsers() {
     const users = new Set();
     safeStore.keys().forEach(k => {
-      const m = k.match(new RegExp(`^${STORAGE_PREFIX}(data|work)_(.+)$`));
+      const m = k.match(new RegExp(`^${STORAGE_PREFIX}(data|work|intro)_(.+)$`));
       if (m) users.add(m[2]);
     });
     return [...users].sort((a, b) => (a === "guest" ? -1 : b === "guest" ? 1 : a.localeCompare(b, "ja")));
@@ -125,6 +141,7 @@ export const Storage = {
   deleteUser(userId) {
     safeStore.remove(`${STORAGE_PREFIX}data_${userId}`);
     safeStore.remove(`${STORAGE_PREFIX}work_${userId}`);
+    safeStore.remove(`${STORAGE_PREFIX}intro_${userId}`);
   },
 
   saveWork(work, userId) {
