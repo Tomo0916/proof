@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>証明で使う言葉 | 合同の証明トレーニング</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    @page { size: A4 portrait; margin: 9mm 10mm; }
+    @media print {
+      body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display: none !important; }
+      main { max-width: none !important; padding: 0 !important; }
+      .print-title { display: flex !important; }
+      /* 紙では2段組みにして、1枚に収める */
+      #phrases { column-count: 2; column-gap: 6mm; }
+      .ph-part { break-inside: avoid; page-break-inside: avoid; padding: 2mm 3mm; margin-bottom: 2.5mm; }
+      .ph-part.s2 { break-inside: auto; }
+      .ph-group-title { break-after: avoid; margin: 1.5mm 0 1mm; }
+      .ph-item { grid-template-columns: 1fr !important; gap: 0 !important; break-inside: avoid; }
+      .ph-list { gap: 1.2mm; }
+      .ph-text { font-size: 8.6pt; line-height: 1.45; }
+      .ph-note, .ph-lead { font-size: 7pt; line-height: 1.4; margin: 0; }
+      .ph-count { display: none; }
+      .ph-part-title { font-size: 9.5pt; }
+      .ph-step { width: 16px; height: 16px; font-size: 8pt; }
+      .ph-symbol-list { grid-template-columns: repeat(2, 1fr); }
+      .ph-symbol-list li { font-size: 7.5pt; }
+      .ph-sym { font-size: 9pt; min-width: 36px; }
+      .katex { font-size: 1em; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+  <header class="no-print bg-indigo-600 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="text-xl" aria-hidden="true">📚</span>
+        <h1 class="text-lg font-bold">証明で使う言葉</h1>
+      </div>
+      <div class="flex gap-1.5">
+        <button type="button" id="btn-print" class="text-xs bg-emerald-500 hover:bg-emerald-600 px-3 py-1.5 rounded font-bold">🖨️ 印刷する</button>
+        <a href="reasons.html" class="text-xs bg-indigo-700/80 hover:bg-indigo-800 px-3 py-1.5 rounded font-bold">📖 図つき</a>
+        <a href="index.html" class="text-xs bg-indigo-700/80 hover:bg-indigo-800 px-3 py-1.5 rounded font-bold">← 問題にもどる</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-5">
+    <!-- 印刷したときだけ出る見出し -->
+    <div class="print-title hidden items-end justify-between border-b-2 border-slate-800 pb-1 mb-2">
+      <div class="text-base font-bold">合同の証明　証明で使う言葉</div>
+      <div class="text-xs">　　組　　番　名前 ＿＿＿＿＿＿＿＿</div>
+    </div>
+    <p class="no-print text-xs sm:text-sm text-slate-600 leading-relaxed bg-white border border-slate-200 rounded-xl p-3 mb-3">
+      合同の証明で使う言い方を、証明を書く順番（1 → 4）にまとめました。文字（$A$, $B$, …）は問題に合わせて変えて使います。
+      「よく使う」は、このアプリの問題でたくさん出てくる言い方です。
+    </p>
+    <div id="phrases"></div>
+  </main>
+
+  <footer class="no-print text-center py-4 text-xs text-slate-400 border-t bg-white mt-auto">
+    中2数学 合同の証明トレーニング｜証明で使う言葉
+  </footer>
+
+  <script type="module">
+    import { phrasesHtml } from "./js/phrases.js";
+    const el = document.getElementById("phrases");
+    el.innerHTML = phrasesHtml();
+    const draw = () => window.renderMathInElement && window.renderMathInElement(document.body, {
+      delimiters: [{ left: "$", right: "$", display: false }],
+      throwOnError: false,
+      macros: { "\\parallel": "\\mathbin{/\\!/}" }
+    });
+    draw();
+    window.addEventListener("load", draw);
+    document.getElementById("btn-print").addEventListener("click", () => window.print());
+  </script>
+</body>
+</html>

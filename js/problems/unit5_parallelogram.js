@@ -21,8 +21,8 @@ export const unit5Problems = [
     triangles: ["ABC", "CDA"],
     proof: {
       blocks: [
-        { reason: "$AB \\parallel DC$ より、錯角は等しいので、", equations: ["$\\angle BAC = \\angle DCA$"] },
-        { reason: "$AD \\parallel BC$ より、錯角は等しいので、", equations: ["$\\angle BCA = \\angle DAC$"] },
+        { reason: "$AB \\parallel DC$ より、平行線の錯角は等しいので、", equations: ["$\\angle BAC = \\angle DCA$"] },
+        { reason: "$AD \\parallel BC$ より、平行線の錯角は等しいので、", equations: ["$\\angle BCA = \\angle DAC$"] },
         { reason: "共通な辺だから、", equations: ["$AC = CA$"] }
       ],
       condition: "1組の辺とその両端の角がそれぞれ等しいので"
@@ -53,7 +53,7 @@ export const unit5Problems = [
       blocks: [
         { reason: "平行四辺形の向かい合う辺は等しいので、", equations: ["$AB = CD$"] },
         { reason: "仮定より、", equations: ["$BE = DF$"] },
-        { reason: "$AB \\parallel DC$ より、錯角は等しいので、", equations: ["$\\angle ABE = \\angle CDF$"] }
+        { reason: "$AB \\parallel DC$ より、平行線の錯角は等しいので、", equations: ["$\\angle ABE = \\angle CDF$"] }
       ],
       condition: "2組の辺とその間の角がそれぞれ等しいので"
     },
@@ -82,7 +82,7 @@ export const unit5Problems = [
     proof: {
       blocks: [
         { reason: "平行四辺形の対角線は、それぞれの中点で交わるので、", equations: ["$AO = CO$"] },
-        { reason: "$AD \\parallel BC$ より、錯角は等しいので、", equations: ["$\\angle OAE = \\angle OCF$"] },
+        { reason: "$AD \\parallel BC$ より、平行線の錯角は等しいので、", equations: ["$\\angle OAE = \\angle OCF$"] },
         { reason: "対頂角は等しいので、", equations: ["$\\angle AOE = \\angle COF$"] }
       ],
       condition: "1組の辺とその両端の角がそれぞれ等しいので"
@@ -173,7 +173,7 @@ export const unit5Problems = [
       blocks: [
         { reason: "仮定より、", equations: ["$\\angle AEB = \\angle CFD = 90^\\circ$"] },
         { reason: "平行四辺形の向かい合う辺は等しいので、", equations: ["$AB = CD$"] },
-        { reason: "$AB \\parallel DC$ より、錯角は等しいので、", equations: ["$\\angle ABE = \\angle CDF$"] }
+        { reason: "$AB \\parallel DC$ より、平行線の錯角は等しいので、", equations: ["$\\angle ABE = \\angle CDF$"] }
       ],
       condition: "直角三角形の斜辺と1つの鋭角がそれぞれ等しいので"
     },

@@ -3,6 +3,7 @@ import { Storage } from "./storage.js";
 import { readEquality, texToPlain, formatPlain } from "./notation.js";
 import { setupCardDrag } from "./drag.js";
 import { NEWS, TAG_LABEL } from "./news.js";
+import { phrasesHtml } from "./phrases.js";
 import { FEEDBACK_FORM } from "./config.js";
 
 // ============================================================
@@ -129,6 +130,10 @@ const dom = {
   btnProfile: $("btn-profile"),
   profileModal: $("profile-modal"),
   templateModal: $("template-modal"),
+  phrasesModal: $("phrases-modal"),
+  phrasesBody: $("phrases-body"),
+  btnPhrases: $("btn-phrases"),
+  btnPhrasesClose: $("btn-phrases-close"),
   newsModal: $("news-modal"),
   newsBody: $("news-body"),
   newsDot: $("news-dot"),
@@ -872,8 +877,23 @@ function showStep2Success({ counted = true, fromRestore = false } = {}) {
 // 名前の登録
 // ============================================================
 function isModalOpen() {
-  return [dom.profileModal, dom.templateModal, dom.newsModal, dom.feedbackModal]
+  return [dom.profileModal, dom.templateModal, dom.phrasesModal, dom.newsModal, dom.feedbackModal]
     .some(m => !m.classList.contains("hidden"));
+}
+
+// ============================================================
+// 証明で使う言葉（早見表）
+// ============================================================
+function openPhrasesModal() {
+  if (!dom.phrasesBody.innerHTML) dom.phrasesBody.innerHTML = phrasesHtml();
+  dom.phrasesModal.classList.remove("hidden");
+  renderMath(dom.phrasesModal);
+  dom.btnPhrasesClose.focus();
+}
+
+function closePhrasesModal() {
+  dom.phrasesModal.classList.add("hidden");
+  dom.btnPhrases.focus();
 }
 
 // ============================================================
@@ -1222,6 +1242,11 @@ function initEvents() {
     if (e.target === dom.templateModal) closeTemplateModal();
   });
 
+  // --- 証明で使う言葉 ---
+  dom.btnPhrases.addEventListener("click", () => { Sound.playClick(); openPhrasesModal(); });
+  dom.btnPhrasesClose.addEventListener("click", () => { Sound.playClick(); closePhrasesModal(); });
+  dom.phrasesModal.addEventListener("click", e => { if (e.target === dom.phrasesModal) closePhrasesModal(); });
+
   // --- お知らせ ---
   dom.btnNews.addEventListener("click", () => { Sound.playClick(); openNewsModal(); });
   dom.btnNewsClose.addEventListener("click", () => { Sound.playClick(); closeNewsModal(); });
@@ -1237,6 +1262,7 @@ function initEvents() {
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
     if (!dom.templateModal.classList.contains("hidden")) closeTemplateModal();
+    else if (!dom.phrasesModal.classList.contains("hidden")) closePhrasesModal();
     else if (!dom.newsModal.classList.contains("hidden")) closeNewsModal();
     else if (!dom.feedbackModal.classList.contains("hidden")) closeFeedbackModal();
     else if (!dom.profileModal.classList.contains("hidden")) closeProfileModal();

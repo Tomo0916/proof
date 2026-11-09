@@ -401,3 +401,28 @@ body.is-card-dragging * {
 }
 .fb-type:has(input:checked) { border-color: #6366f1; background: #eef2ff; color: #3730a3; font-weight: 700; }
 .fb-type input { accent-color: #6366f1; }
+
+/* ===== 証明で使う言葉（早見表） ===== */
+.ph-part { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; background: #fff; }
+.ph-part-title { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: #0f172a; }
+.ph-step { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 9999px; font-size: 12px; }
+.ph-part.s1 .ph-step { background: #e0e7ff; color: #3730a3; }
+.ph-part.s2 .ph-step { background: #e2e8f0; color: #334155; }
+.ph-part.s3 .ph-step { background: #fef3c7; color: #92400e; }
+.ph-part.s4 .ph-step { background: #dcfce7; color: #166534; }
+.ph-part.s1 { border-left: 4px solid #818cf8; }
+.ph-part.s2 { border-left: 4px solid #94a3b8; }
+.ph-part.s3 { border-left: 4px solid #f59e0b; }
+.ph-part.s4 { border-left: 4px solid #22c55e; }
+.ph-lead { font-size: 11px; color: #64748b; margin: 2px 0 6px; line-height: 1.6; }
+.ph-group-title { font-size: 11px; font-weight: 700; color: #475569; margin: 8px 0 4px; padding-bottom: 2px; border-bottom: 1px dashed #e2e8f0; }
+.ph-list { display: flex; flex-direction: column; gap: 6px; }
+.ph-item { display: grid; grid-template-columns: 1fr; gap: 1px; }
+@media (min-width: 640px) { .ph-item { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 10px; align-items: baseline; } }
+.ph-text { font-size: 14px; font-weight: 600; color: #0f172a; line-height: 1.6; }
+.ph-note { font-size: 11px; color: #64748b; line-height: 1.6; display: flex; flex-wrap: wrap; gap: 0 6px; align-items: baseline; }
+.ph-count { font-size: 10px; color: #64748b; background: #f1f5f9; border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+.ph-count.often { color: #9f1239; background: #ffe4e6; font-weight: 700; }
+.ph-symbol-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 12px; margin-top: 4px; }
+.ph-symbol-list li { display: flex; align-items: baseline; gap: 8px; font-size: 12px; color: #334155; }
+.ph-sym { min-width: 52px; font-size: 15px; color: #0f172a; }
