@@ -3,7 +3,7 @@
  * ・学習記録：この端末に記録がある人ごとの成績と、問題ごとの進み具合
  * ・問題一覧：全問題の区分・単元・合同条件など。行を開くと図・模範の証明・使わないカード・解説
  */
-import { allProblems } from "./problems/index.js";
+import { allProblems, PARTS } from "./problems/index.js";
 import { Storage } from "./storage.js";
 import { texToPlain } from "./notation.js";
 import { modelProofLines, shortCondition } from "./proof-text.js";
@@ -32,7 +32,7 @@ const tierBadge = (p, small = false) => p.tier === "advanced"
 
 // 単元の順番と名前
 const units = [];
-allProblems.forEach(p => { if (!units.some(u => u.key === p.unit)) units.push({ key: p.unit, label: p.unitLabel }); });
+allProblems.forEach(p => { if (!units.some(u => u.key === p.unit)) units.push({ key: p.unit, label: p.unitLabel, part: p.part }); });
 const basicCount = allProblems.filter(p => p.tier !== "advanced").length;
 const advancedCount = allProblems.length - basicCount;
 
@@ -129,7 +129,12 @@ function renderMatrix(users) {
       <th class="py-2 px-2 text-center whitespace-nowrap">正解した人</th>
     </tr>`;
   let html = "";
-  units.forEach(unit => {
+  units.forEach((unit, ui) => {
+    // 分野が変わるところに見出し
+    if (ui === 0 || units[ui - 1].part !== unit.part) {
+      const part = PARTS.find(x => x.key === unit.part);
+      html += `<tr class="part-row"><td class="sticky-col pt-4 pb-1.5 pr-4 font-bold text-indigo-700" colspan="${users.length + 2}">${escapeHtml(part.label)}</td></tr>`;
+    }
     html += `<tr class="unit-row"><td class="sticky-col py-1.5 pr-4 font-bold text-slate-600" colspan="${users.length + 2}">${escapeHtml(unit.label)}</td></tr>`;
     allProblems.filter(p => p.unit === unit.key).forEach(p => {
       const doneBy = users.filter(u => u.statuses.get(p.id).code === "done").length;
@@ -209,7 +214,7 @@ function filteredProblems() {
   const text = $("f-text").value.trim();
   return allProblems.filter(p =>
     (tier === "all" || p.tier === tier) &&
-    (unit === "all" || p.unit === unit) &&
+    (unit === "all" || p.unit === unit || unit === `part:${p.part}`) &&
     (cond === "all" || shortCondition(p) === cond) &&
     (!text || `${p.id} ${p.title} ${p.statement}`.includes(text))
   );
@@ -230,7 +235,7 @@ function renderProblems() {
         <td class="py-2 pl-1 pr-2"><input type="checkbox" class="sel w-4 h-4 accent-indigo-600 cursor-pointer" data-sel="${p.id}" ${selected.has(p.id) ? "checked" : ""} aria-label="${escapeHtml(p.title)}を印刷に選ぶ"></td>
         <td class="py-2 pr-3 font-mono text-slate-500 whitespace-nowrap">${p.id}</td>
         <td class="py-2 pr-3">${tierBadge(p, true)}</td>
-        <td class="py-2 pr-3 whitespace-nowrap">${escapeHtml(p.unitLabel)}</td>
+        <td class="py-2 pr-3 whitespace-nowrap">${escapeHtml(p.unitLabel)}<div class="text-[10px] text-slate-400">${escapeHtml(p.partLabel)}</div></td>
         <td class="py-2 pr-3 whitespace-nowrap">${p.level}</td>
         <td class="py-2 pr-3 font-bold">${open ? "▼" : "▶"} ${escapeHtml(p.title)}</td>
         <td class="py-2 pr-3">${escapeHtml(shortCondition(p))}</td>
@@ -243,7 +248,10 @@ function renderProblems() {
 
 function initProblemFilters() {
   $("f-unit").innerHTML = `<option value="all">すべて</option>` +
-    units.map(u => `<option value="${u.key}">${escapeHtml(u.label)}</option>`).join("");
+    PARTS.map(part => `<optgroup label="${escapeHtml(part.label)}">
+      <option value="part:${part.key}">${escapeHtml(part.label)}（すべて）</option>
+      ${units.filter(u => u.part === part.key).map(u => `<option value="${u.key}">${escapeHtml(u.label)}</option>`).join("")}
+    </optgroup>`).join("");
   const conds = [...new Set(allProblems.map(shortCondition))];
   $("f-cond").innerHTML = `<option value="all">すべて</option>` +
     conds.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");

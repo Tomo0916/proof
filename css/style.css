@@ -534,3 +534,18 @@ body.is-card-dragging, body.is-card-dragging * { cursor: grabbing !important; us
 .slot.is-wrong { border-style: solid; border-color: var(--ng); background: var(--ng-bg); }
 .slot-empty { color: var(--muted); font-size: 13px; }
 .g-cards { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; background: var(--ground); border-radius: var(--radius); }
+
+/* 入門編のコース */
+.course-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+.course-tab {
+  display: grid; gap: 2px; padding: 10px 12px; border-radius: var(--radius);
+  border: 1px solid var(--line-strong); background: var(--paper); color: var(--ink); text-decoration: none;
+}
+.course-tab:hover { border-color: var(--navy); }
+.course-tab[aria-current="page"] { border-color: var(--navy); background: var(--navy); color: #fff; }
+.course-step { font-size: 11px; font-weight: 700; color: var(--muted); }
+.course-tab[aria-current="page"] .course-step, .course-tab[aria-current="page"] .course-count { color: var(--navy-soft); }
+.course-name { font-size: 14px; font-weight: 700; line-height: 1.4; }
+.course-count { font-size: 11px; color: var(--muted); }
+.course-desc { font-size: 13px; color: var(--ink-2); margin-top: 12px; line-height: 1.7; }
+.course-desc + .lesson-list { margin-top: 10px; }

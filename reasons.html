@@ -22,7 +22,13 @@
       background: var(--paper); color: var(--ink-2); border: 1px solid var(--line-strong); text-decoration: none;
     }
     .nav-bar a:hover { border-color: var(--navy); color: var(--navy); }
-    .rc-group h2 { font-size: 18px; font-weight: 700; color: var(--ink); margin: 6px 0 12px; }
+    .rc-part { display: flex; flex-direction: column; gap: 22px; padding-bottom: 8px; }
+    .rc-part + .rc-part { border-top: 2px solid var(--navy); padding-top: 22px; margin-top: 6px; }
+    .rc-part-head h2 { font-size: 21px; font-weight: 700; color: var(--navy); }
+    .rc-part-head p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .rc-group h3 { font-size: 17px; font-weight: 700; color: var(--ink); margin: 0 0 12px; }
+    .nav-sep { flex-shrink: 0; width: 1px; margin: 4px 4px; background: var(--line-strong); }
+    .rc-links-part { font-size: 11px; color: var(--muted); margin-top: 6px; }
     .rc-note { font-size: 13px; color: var(--muted); margin: -6px 0 12px; line-height: 1.7; }
     .rc-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
     @media (min-width: 640px) { .rc-grid { grid-template-columns: repeat(2, 1fr); } }

@@ -1,13 +1,14 @@
 /**
  * 入門編
  * 証明に慣れるための5つの練習。問題は、定期テストの問題データから自動で作る。
+ * 2つのコース（三角形の合同（基本）／いろいろな図形の合同）に分け、コースごとの問題だけを使う。
  *   1 理由あて            図で色のついた辺や角が、なぜ等しいのかを選ぶ
  *   2 合同条件えらび      印のついた辺や角から、合同条件を選ぶ
  *   3 対応する頂点さがし  合同な三角形の、対応する点・正しい書き方を選ぶ
  *   4 穴うめ証明          完成した証明の空らんを選ぶ（レベル1〜3）
  *   5 ガイドつき並べかえ  わくに合わせてカードを入れ、証明を完成させる
  */
-import { allProblems } from "./problems/index.js";
+import { allProblems, PARTS } from "./problems/index.js";
 import { drawFigure } from "./figure.js";
 import { texToPlain } from "./notation.js";
 import { Storage } from "./storage.js";
@@ -15,6 +16,12 @@ import { CIRCLED, shortCondition } from "./proof-text.js";
 
 const $ = id => document.getElementById(id);
 const BASIC = allProblems.filter(p => p.tier !== "advanced");
+
+// コース（分野）：basic 三角形の合同（基本）／figures いろいろな図形の合同
+const COURSES = PARTS;
+const current = { course: "basic" };
+const coursePool = () => BASIC.filter(p => p.part === current.course);
+const courseOf = key => COURSES.find(c => c.key === key);
 
 // ============================================================
 // 小さな道具
@@ -81,8 +88,12 @@ const catOf = text => CATS.find(c => c.re.test(text)) || null;
 // 問題文に書いてある図形の性質（中点・正三角形など）は「仮定」とも言えるので、そのときは「仮定」を選択肢に入れない
 const GIVEN_FIGURE = ["chuten", "nitoubun", "teikaku", "seisankaku", "heikou", "chouhou", "hishi", "seihou"];
 
+// 基本のコースでは、図形の性質（平行四辺形など）は選択肢に出さない
+const BASIC_CATS = ["katei", "taichokaku", "sakkaku", "doui", "kyotsuhen", "kyotsukaku", "chuten", "nitoubun"];
+
 function distractorCats(correctKey, n) {
-  const ok = k => k !== correctKey && !(GIVEN_FIGURE.includes(correctKey) && k === "katei");
+  const inCourse = k => current.course !== "basic" || BASIC_CATS.includes(k);
+  const ok = k => k !== correctKey && inCourse(k) && !(GIVEN_FIGURE.includes(correctKey) && k === "katei");
   const near = shuffle([...new Set(CONFUSE.filter(g => g.includes(correctKey)).flat())].filter(ok));
   const far = shuffle(CATS.map(c => c.key).filter(k => ok(k) && !near.includes(k)));
   return [...near.slice(0, 2), ...far].slice(0, n).map(k => CATS.find(c => c.key === k));
@@ -137,7 +148,7 @@ const REASON_POOL = BASIC.flatMap(p => p.proof.blocks
     .map(eq => ({ ...x, eq, key: `${x.p.id}:${eq}` }))));
 
 function makeReasonQuestion() {
-  const it = pick(REASON_POOL);
+  const it = pick(REASON_POOL.filter(x => x.p.part === current.course));
   const choices = shuffle([it.cat, ...distractorCats(it.cat.key, 3)]);
   return {
     key: it.key,
@@ -158,6 +169,11 @@ const CONDITION_LABELS = [
   "3組の辺", "2組の辺とその間の角", "1組の辺とその両端の角",
   "直角三角形の斜辺と1つの鋭角", "直角三角形の斜辺と他の1辺", NOT_CONGRUENT
 ];
+// 基本のコースでは、直角三角形の合同条件は出さない
+const conditionLabels = () => (current.course === "basic"
+  ? ["3組の辺", "2組の辺とその間の角", "1組の辺とその両端の角", NOT_CONGRUENT]
+  : CONDITION_LABELS);
+
 const CONDITION_HINT = {
   "3組の辺": "辺が3組とも等しいので、「3組の辺」です。",
   "2組の辺とその間の角": "等しい角が、等しい2組の辺にはさまれているので、「2組の辺とその間の角」です。",
@@ -170,6 +186,7 @@ const CONDITION_HINT = {
 const CONDITION_EXAMPLES = [
   {
     key: "ex-ssa",
+    course: "basic",
     figure: pairFig(PAIR, { sides: [{ segs: ["AB", "DE"], n: 1 }, { segs: ["BC", "EF"], n: 2 }], angles: [{ angs: ["CAB", "FDE"], n: 1 }] }),
     equations: ["$AB = DE$", "$BC = EF$", "$\\angle A = \\angle D$"],
     answer: NOT_CONGRUENT,
@@ -177,6 +194,7 @@ const CONDITION_EXAMPLES = [
   },
   {
     key: "ex-aaa",
+    course: "basic",
     figure: pairFig(PAIR_SMALL, { angles: [{ angs: ["CAB", "FDE"], n: 1 }, { angs: ["ABC", "DEF"], n: 2 }, { angs: ["BCA", "EFD"], n: 3 }] }),
     equations: ["$\\angle A = \\angle D$", "$\\angle B = \\angle E$", "$\\angle C = \\angle F$"],
     answer: NOT_CONGRUENT,
@@ -184,6 +202,7 @@ const CONDITION_EXAMPLES = [
   },
   {
     key: "ex-legs",
+    course: "figures",
     figure: pairFig(PAIR_RIGHT, { rights: ["ACB", "DFE"], sides: [{ segs: ["AC", "DF"], n: 1 }, { segs: ["CB", "FE"], n: 2 }] }),
     equations: ["$\\angle C = \\angle F = 90^\\circ$", "$AC = DF$", "$BC = EF$"],
     answer: "2組の辺とその間の角",
@@ -194,17 +213,17 @@ const CONDITION_EXAMPLES = [
 function makeConditionQuestion() {
   const useExample = Math.random() < 0.3;
   if (useExample) {
-    const ex = pick(CONDITION_EXAMPLES);
+    const ex = pick(CONDITION_EXAMPLES.filter(x => x.course === current.course));
     return {
       key: ex.key,
       kind: "choice",
       figure: ex.figure,
       prompt: `わかっていることは ${ex.equations.join("、")} です。合同条件はどれ？`,
-      choices: CONDITION_LABELS.map(l => ({ label: l, correct: l === ex.answer })),
+      choices: conditionLabels().map(l => ({ label: l, correct: l === ex.answer })),
       explain: ex.explain
     };
   }
-  const p = pick(BASIC);
+  const p = pick(coursePool());
   const eqs = p.proof.blocks.flatMap(b => b.equations);
   const answer = shortCondition(p);
   const [t1, t2] = p.triangles;
@@ -213,7 +232,7 @@ function makeConditionQuestion() {
     kind: "choice",
     figure: figureWith(p, eqs, { parallels: false }),
     prompt: `${tri(t1)} と ${tri(t2)} で、わかっていることは ${eqs.join("、")} です。合同条件はどれ？`,
-    choices: CONDITION_LABELS.map(l => ({ label: l, correct: l === answer })),
+    choices: conditionLabels().map(l => ({ label: l, correct: l === answer })),
     explain: CONDITION_HINT[answer] || ""
   };
 }
@@ -222,7 +241,7 @@ function makeConditionQuestion() {
 // 練習3：対応する頂点さがし
 // ============================================================
 function makeCorrespondQuestion() {
-  const p = pick(BASIC);
+  const p = pick(coursePool());
   const [t1, t2] = p.triangles;
   const eqs = p.proof.blocks.flatMap(b => b.equations);
   const others = [...t2].sort().join(", ");
@@ -289,7 +308,8 @@ function optionsFor(line, p) {
   }
   if (line.type === "condition") {
     const dummy = (p.dummies || []).filter(d => d.type === "condition").map(d => d.text);
-    const pool = [...new Set([...dummy, ...shuffle(ALL_CONDITIONS)])].filter(c => c !== line.text);
+    const conds = current.course === "basic" ? ALL_CONDITIONS.slice(0, 3) : ALL_CONDITIONS;
+    const pool = [...new Set([...dummy, ...shuffle(conds)])].filter(c => c !== line.text);
     return shuffle([line.text, ...pool.slice(0, 2)]);
   }
   const [t1, t2] = p.triangles;
@@ -299,7 +319,7 @@ function optionsFor(line, p) {
 const KANA = ["ア", "イ", "ウ", "エ", "オ", "カ"];
 
 function makeFillQuestion(level) {
-  const p = pick(BASIC);
+  const p = pick(coursePool());
   const lines = proofLines(p);
   const reasonIdx = lines.map((l, i) => (l.type === "reason" ? i : -1)).filter(i => i >= 0);
   const condIdx = lines.findIndex(l => l.type === "condition");
@@ -338,7 +358,7 @@ const SECTIONS = [
 ];
 
 function makeGuidedQuestion() {
-  const p = pick(BASIC);
+  const p = pick(coursePool());
   const [t1, t2] = p.triangles;
   const cards = [{ id: "target", type: "target", text: `${tri(t1)} と ${tri(t2)} において` }];
   const slots = [{ sec: 1, type: "target" }];
@@ -376,10 +396,22 @@ const LESSONS = [
   { id: "guided", title: "ガイドつき並べかえ", desc: "わくに合わせてカードを入れ、証明を完成させよう。使わないカードはありません。", goal: 3, make: makeGuidedQuestion }
 ];
 
-let progress = Storage.loadIntro();
+// 進み具合はコースごとに保存する { basic: { reason: {...}, ... }, figures: {...} }
+function loadProgress() {
+  const raw = Storage.loadIntro();
+  // コースに分ける前の記録は「三角形の合同（基本）」に入れる
+  if (!raw.basic && !raw.figures && LESSONS.some(l => raw[l.id])) {
+    const moved = { basic: {} };
+    LESSONS.forEach(l => { if (raw[l.id]) moved.basic[l.id] = raw[l.id]; });
+    Storage.saveIntro(moved);
+    return moved;
+  }
+  return raw;
+}
+let progress = loadProgress();
 
-function lessonProgress(lesson) {
-  const rec = progress[lesson.id] || {};
+function lessonProgress(lesson, courseKey = current.course) {
+  const rec = (progress[courseKey] || {})[lesson.id] || {};
   if (lesson.levels) {
     const levels = lesson.levels.map(lv => Math.min((rec.levels || {})[lv] || 0, lesson.goalPerLevel));
     const done = levels.reduce((a, b) => a + b, 0);
@@ -391,14 +423,15 @@ function lessonProgress(lesson) {
 }
 
 function recordCorrect(lesson, level) {
-  const rec = progress[lesson.id] || {};
+  const box = progress[current.course] = progress[current.course] || {};
+  const rec = box[lesson.id] || {};
   if (level) {
     rec.levels = rec.levels || {};
     rec.levels[level] = (rec.levels[level] || 0) + 1;
   } else {
     rec.correct = (rec.correct || 0) + 1;
   }
-  progress[lesson.id] = rec;
+  box[lesson.id] = rec;
   Storage.saveIntro(progress);
 }
 
@@ -414,21 +447,34 @@ function progressBar({ done, goal }) {
   return `<div class="ip-bar"><span style="width:${pct}%"></span></div>`;
 }
 
+const courseCleared = key => LESSONS.filter(l => lessonProgress(l, key).cleared).length;
+
 function renderHome() {
   state.lesson = null;
   document.title = "入門編 | 合同の証明トレーニング";
-  const allCleared = LESSONS.every(l => lessonProgress(l).cleared);
+  const c = courseOf(current.course);
+  const allCleared = courseCleared(c.key) === LESSONS.length;
+  const nextCourse = COURSES[COURSES.findIndex(x => x.key === c.key) + 1];
   view.innerHTML = `
     <section class="intro-hero">
       <h1>入門編</h1>
-      <p>証明を書く前に、図の見方・合同条件・証明の形を、ひとつずつ練習しよう。上から順に進めるのがおすすめです。</p>
+      <p>証明を書く前に、図の見方・合同条件・証明の形を、ひとつずつ練習しよう。まずは「${COURSES[0].label}」から始めて、上から順に進めるのがおすすめです。</p>
     </section>
+    <nav class="course-tabs" aria-label="コース">
+      ${COURSES.map((x, i) => `
+        <a href="#${x.key}" class="course-tab" ${x.key === c.key ? 'aria-current="page"' : ""}>
+          <span class="course-step">コース${i + 1}</span>
+          <span class="course-name">${x.label}</span>
+          <span class="course-count">${courseCleared(x.key)} / ${LESSONS.length} クリア</span>
+        </a>`).join("")}
+    </nav>
+    <p class="course-desc">${c.desc}を練習します。</p>
     <ol class="lesson-list">
       ${LESSONS.map((l, i) => {
         const pr = lessonProgress(l);
         return `
         <li>
-          <a class="lesson ${pr.cleared ? "is-cleared" : ""}" href="#${l.id}">
+          <a class="lesson ${pr.cleared ? "is-cleared" : ""}" href="#${c.key}/${l.id}">
             <span class="lesson-num">${pr.cleared ? "✓" : i + 1}</span>
             <span class="lesson-body">
               <span class="lesson-title">${l.title}</span>
@@ -441,8 +487,14 @@ function renderHome() {
       }).join("")}
     </ol>
     <div class="intro-next ${allCleared ? "is-ready" : ""}">
-      <p>${allCleared ? "入門編をすべてクリアしました。いよいよ本番の問題に挑戦しよう！" : "入門編が終わったら、本番の問題（定期テスト）に進もう。"}</p>
-      <a class="btn-primary" href="index.html">定期テストの問題へ</a>
+      ${allCleared && nextCourse
+        ? `<p>「${c.label}」コースをクリアしました。次は「${nextCourse.label}」に進もう！</p>
+           <a class="btn-primary" href="#${nextCourse.key}">「${nextCourse.label}」コースへ</a>`
+        : allCleared
+          ? `<p>入門編の「${c.label}」コースをクリアしました。いよいよ本番の問題に挑戦しよう！</p>
+             <a class="btn-primary" href="index.html">定期テストの問題へ</a>`
+          : `<p>このコースが終わったら、${nextCourse ? `「${nextCourse.label}」コースや、` : ""}本番の問題（定期テスト）に進もう。</p>
+             <a class="btn-ghost" href="index.html">定期テストの問題へ</a>`}
     </div>`;
   window.scrollTo(0, 0);
 }
@@ -461,7 +513,7 @@ function renderLesson() {
     <p class="hint mb-3">${["", "空らんは1つ。", "空らんは2つ（理由と合同条件）。", "理由・合同条件・結論が、すべて空らん。"][state.level]}</p>` : "";
 
   view.innerHTML = `
-    <a class="back-link" href="#">‹ 入門編</a>
+    <a class="back-link" href="#${current.course}">‹ 入門編（${courseOf(current.course).label}）</a>
     <div class="lesson-head">
       <h1>${lesson.title}</h1>
       <span class="lesson-count">${pr.cleared ? "クリア！" : `正解 ${pr.done} / ${pr.goal}`}</span>
@@ -715,11 +767,15 @@ view.addEventListener("click", e => {
   else if (t.dataset.act === "check-guided") checkGuided();
 });
 
+// URL の「#コース/練習」を読む（例：#basic/reason、#figures）
 function route() {
-  progress = Storage.loadIntro();
-  const lesson = LESSONS.find(l => `#${l.id}` === location.hash);
+  progress = loadProgress();
+  const [courseKey, lessonId] = location.hash.replace(/^#/, "").split("/");
+  const courseChanged = courseOf(courseKey) && courseKey !== current.course;
+  if (courseOf(courseKey)) current.course = courseKey;
+  const lesson = LESSONS.find(l => l.id === lessonId);
   if (lesson) {
-    if (state.lesson !== lesson) {
+    if (state.lesson !== lesson || courseChanged) {
       state.lesson = lesson;
       state.q = null;
       state.lastKey = null;
@@ -745,4 +801,4 @@ window.addEventListener("load", () => renderMath(view));
 const user = Storage.getActiveUser();
 $("user-display").textContent = user === "guest" ? "ゲスト" : user;
 
-export { LESSONS, REASON_POOL, makeReasonQuestion, makeConditionQuestion, makeCorrespondQuestion, makeFillQuestion, makeGuidedQuestion, proofLines };
+export { LESSONS, COURSES, current, REASON_POOL, makeReasonQuestion, makeConditionQuestion, makeCorrespondQuestion, makeFillQuestion, makeGuidedQuestion, proofLines };

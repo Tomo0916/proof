@@ -1,4 +1,4 @@
-import { allProblems } from "./problems/index.js";
+import { allProblems, PARTS } from "./problems/index.js";
 import { Storage } from "./storage.js";
 import { readEquality, texToPlain, formatPlain } from "./notation.js";
 import { setupCardDrag } from "./drag.js";
@@ -234,16 +234,35 @@ function problemsInScope() {
 }
 
 // 単元の選択肢（選んでいる範囲に問題がある単元だけ）
+// 単元の選択肢。分野（三角形の合同（基本）／いろいろな図形の合同）ごとにまとめる
 function initUnitSelector() {
   const current = dom.selectUnit.value || "all";
-  const units = new Map();
-  problemsInScope().forEach(p => { if (!units.has(p.unit)) units.set(p.unit, p.unitLabel); });
+  const pool = problemsInScope();
   let html = '<option value="all">すべての単元</option>';
-  units.forEach((label, key) => {
-    html += `<option value="${escapeHtml(key)}">${escapeHtml(label)}</option>`;
+  const values = ["all"];
+  PARTS.forEach(part => {
+    const inPart = pool.filter(p => p.part === part.key);
+    if (inPart.length === 0) return;
+    const units = new Map();
+    inPart.forEach(p => { if (!units.has(p.unit)) units.set(p.unit, p.unitLabel); });
+    html += `<optgroup label="${escapeHtml(part.label)}">`;
+    html += `<option value="part:${part.key}">${escapeHtml(part.label)}（すべて）</option>`;
+    values.push(`part:${part.key}`);
+    units.forEach((label, key) => {
+      html += `<option value="${escapeHtml(key)}">${escapeHtml(label)}</option>`;
+      values.push(key);
+    });
+    html += "</optgroup>";
   });
   dom.selectUnit.innerHTML = html;
-  dom.selectUnit.value = units.has(current) ? current : "all";
+  dom.selectUnit.value = values.includes(current) ? current : "all";
+}
+
+// 選んでいる単元（または分野）に入る問題か
+function inSelectedUnit(p, unitKey) {
+  if (unitKey === "all") return true;
+  if (unitKey.startsWith("part:")) return p.part === unitKey.slice(5);
+  return p.unit === unitKey;
 }
 
 // 問題リスト（正解したことがある問題には ✓ をつける）
@@ -263,7 +282,7 @@ function renderProblemOptions() {
 function filterProblems(preferId) {
   const unitKey = dom.selectUnit.value;
   const pool = problemsInScope();
-  state.filteredProblems = unitKey === "all" ? [...pool] : pool.filter(p => p.unit === unitKey);
+  state.filteredProblems = pool.filter(p => inSelectedUnit(p, unitKey));
   const found = state.filteredProblems.findIndex(p => p.id === preferId);
   state.index = found === -1 ? 0 : found;
   renderProblemOptions();
@@ -382,7 +401,7 @@ function loadProblem(index) {
   dom.probTier.textContent = advanced ? "発展" : "定期テスト";
   dom.probTier.className = `tier-badge ${advanced ? "tier-advanced" : "tier-basic"}`;
   dom.probTier.title = advanced ? "定期テストより難しい問題です" : "定期テストでよく出るレベルの問題です";
-  dom.probTag.textContent = prob.unitLabel;
+  dom.probTag.textContent = `${prob.partLabel} ／ ${prob.unitLabel}`;
   dom.probTitle.textContent = `問${index + 1}. ${prob.title}`;
   dom.probStatement.innerHTML = prob.statement;
   dom.probFigure.innerHTML = prob.svg;

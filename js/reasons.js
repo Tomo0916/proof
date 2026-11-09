@@ -3,7 +3,7 @@
  * 証明で使う可能性のあるカード（理由・合同条件）を、イメージ図・例・使う場面と一緒に見せる。
  * それぞれのカードを使う問題も、問題データから自動で探して表示する。
  */
-import { allProblems } from "./problems/index.js";
+import { allProblems, PARTS } from "./problems/index.js";
 import { drawFigure } from "./figure.js";
 
 const $ = id => document.getElementById(id);
@@ -28,23 +28,17 @@ const conditionIs = text => p => p.proof.condition === text;
  */
 const GROUPS = [
   {
-    id: "given", title: "問題文に書いてあること",
+    id: "given", title: "問題文に書いてあること", part: "basic",
     cards: [{
       card: "仮定より、",
       figure: { width: 200, height: 130, pts: { A: [30, 25], C: [30, 105], D: [170, 25], B: [170, 105], O: [100, 65] }, segs: ["AOB", "COD"], sides: [{ segs: ["AO", "OB"], n: 1 }], labels: { O: [0, -13] } },
       example: "問題文に「$AO = BO$ ならば」 → 仮定より、$AO = BO$",
       when: "問題文に「〜ならば」「〜のとき」と、はじめから書いてあること（仮定）を使うとき。いちばんよく使います。",
       used: reasonHas(/^仮定より/)
-    }, {
-      card: "仮定より、（垂線があるとき）",
-      figure: { width: 200, height: 140, pts: { A: [100, 18], B: [35, 125], C: [165, 125], H: [100, 125] }, segs: ["AB", "AC", "BHC", "AH"], rights: ["AHC", "AHB"] },
-      example: "$AH \\perp BC$ のとき、$\\angle AHB = \\angle AHC = 90^\\circ$",
-      when: "「垂線をひく」「⊥」と書いてあるときは、直角（$90^\\circ$）の角が等しいと書けます。直角三角形の合同条件を使う問題で必ず使います。",
-      used: p => p.proof.blocks.some(b => b.equations.some(e => /= 90\^\\circ\$$/.test(e)))
     }]
   },
   {
-    id: "lines", title: "交わる直線・平行線",
+    id: "lines", title: "交わる直線・平行線", part: "basic",
     cards: [{
       card: "対頂角は等しいので、",
       figure: { width: 200, height: 130, pts: { A: [30, 25], B: [170, 105], C: [30, 105], D: [170, 25], O: [100, 65] }, segs: ["AOB", "COD"], angles: [{ angs: ["AOC", "BOD"], n: 1 }], labels: { O: [0, -13] } },
@@ -66,7 +60,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "common", title: "共通な辺・角",
+    id: "common", title: "共通な辺・角", part: "basic",
     cards: [{
       card: "共通な辺だから、",
       figure: { width: 220, height: 150, pts: { A: [110, 18], B: [45, 72], C: [110, 128], D: [175, 72] }, segs: ["AB", "BC", "CD", "DA", "AC"], highlights: ["AC"] },
@@ -82,7 +76,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "mid", title: "中点・二等分線",
+    id: "mid", title: "中点・二等分線", part: "basic",
     cards: [{
       card: "$M$ は線分 $AB$ の中点だから、",
       figure: { width: 200, height: 70, pts: { A: [25, 40], M: [100, 40], B: [175, 40] }, segs: ["AMB"], sides: [{ segs: ["AM", "MB"], n: 1 }] },
@@ -98,7 +92,30 @@ const GROUPS = [
     }]
   },
   {
-    id: "triangle", title: "二等辺三角形・正三角形",
+    id: "conditions", title: "三角形の合同条件", part: "basic",
+    note: "等しい辺や角（①②③）をそろえたら、最後にどれか1つを選んで書きます。カードでは前に「①, ②, ③より、」が自動でつきます。",
+    cards: [{
+      card: "3組の辺がそれぞれ等しいので",
+      figure: { width: 238, height: 130, pts: TWO_TRI, segs: ["AB", "BC", "CA", "DE", "EF", "FD"], sides: [{ segs: ["AB", "DE"], n: 1 }, { segs: ["BC", "EF"], n: 2 }, { segs: ["CA", "FD"], n: 3 }] },
+      example: "$AB = DE$、$BC = EF$、$CA = FD$",
+      when: "辺が3組とも等しいとき。共通な辺を使うことも多いです。",
+      used: conditionIs("3組の辺がそれぞれ等しいので")
+    }, {
+      card: "2組の辺とその間の角がそれぞれ等しいので",
+      figure: { width: 238, height: 130, pts: TWO_TRI, segs: ["AB", "BC", "CA", "DE", "EF", "FD"], sides: [{ segs: ["AB", "DE"], n: 1 }, { segs: ["CA", "FD"], n: 2 }], angles: [{ angs: ["BAC", "EDF"], n: 1 }] },
+      example: "$AB = DE$、$AC = DF$、$\\angle BAC = \\angle EDF$",
+      when: "等しい角が、等しい2組の辺に「はさまれている」ことを必ず確かめよう。",
+      used: conditionIs("2組の辺とその間の角がそれぞれ等しいので")
+    }, {
+      card: "1組の辺とその両端の角がそれぞれ等しいので",
+      figure: { width: 238, height: 130, pts: TWO_TRI, segs: ["AB", "BC", "CA", "DE", "EF", "FD"], sides: [{ segs: ["AB", "DE"], n: 1 }], angles: [{ angs: ["CAB", "FDE"], n: 1 }, { angs: ["ABC", "DEF"], n: 2 }] },
+      example: "$AB = DE$、$\\angle A = \\angle D$、$\\angle B = \\angle E$",
+      when: "等しい2組の角が、等しい辺の「両はし」にあることを確かめよう。",
+      used: conditionIs("1組の辺とその両端の角がそれぞれ等しいので")
+    }]
+  },
+  {
+    id: "triangle", title: "二等辺三角形・正三角形", part: "figures",
     cards: [{
       card: "二等辺三角形の底角は等しいので、",
       figure: { width: 200, height: 142, pts: { A: [100, 22], B: [35, 125], C: [165, 125] }, segs: ["AB", "AC", "BC"], sides: [{ segs: ["AB", "AC"], n: 1 }], angles: [{ angs: ["ABC", "BCA"], n: 1 }] },
@@ -114,7 +131,30 @@ const GROUPS = [
     }]
   },
   {
-    id: "pgram", title: "平行四辺形",
+    id: "right", title: "直角三角形", part: "figures",
+    note: "直角三角形では、三角形の3つの合同条件のほかに、次の2つの合同条件が使えます。斜辺は、直角の向かいにある辺です。",
+    cards: [{
+      card: "仮定より、（垂線があるとき）",
+      figure: { width: 200, height: 140, pts: { A: [100, 18], B: [35, 125], C: [165, 125], H: [100, 125] }, segs: ["AB", "AC", "BHC", "AH"], rights: ["AHC", "AHB"] },
+      example: "$AH \\perp BC$ のとき、$\\angle AHB = \\angle AHC = 90^\\circ$",
+      when: "「垂線をひく」「⊥」と書いてあるときは、直角（$90^\\circ$）の角が等しいと書けます。直角三角形の合同条件を使う問題で必ず使います。",
+      used: p => p.proof.blocks.some(b => b.equations.some(e => /= 90\^\\circ\$$/.test(e)))
+    }, {
+      card: "直角三角形の斜辺と1つの鋭角がそれぞれ等しいので",
+      figure: { width: 238, height: 130, pts: TWO_RIGHT, segs: ["AB", "BC", "CA", "DE", "EF", "FD"], rights: ["ACB", "DFE"], sides: [{ segs: ["AB", "DE"], n: 1 }], angles: [{ angs: ["CAB", "FDE"], n: 1 }] },
+      example: "$\\angle C = \\angle F = 90^\\circ$、$AB = DE$、$\\angle A = \\angle D$",
+      when: "直角三角形で、斜辺（直角の向かいの辺）と、直角でない角1つが等しいとき。直角であることも書きます。",
+      used: conditionIs("直角三角形の斜辺と1つの鋭角がそれぞれ等しいので")
+    }, {
+      card: "直角三角形の斜辺と他の1辺がそれぞれ等しいので",
+      figure: { width: 238, height: 130, pts: TWO_RIGHT, segs: ["AB", "BC", "CA", "DE", "EF", "FD"], rights: ["ACB", "DFE"], sides: [{ segs: ["AB", "DE"], n: 1 }, { segs: ["AC", "DF"], n: 2 }] },
+      example: "$\\angle C = \\angle F = 90^\\circ$、$AB = DE$、$AC = DF$",
+      when: "直角三角形で、斜辺と、もう1つの辺が等しいとき。直角であることも書きます。",
+      used: conditionIs("直角三角形の斜辺と他の1辺がそれぞれ等しいので")
+    }]
+  },
+  {
+    id: "pgram", title: "平行四辺形", part: "figures",
     cards: [{
       card: "平行四辺形の向かい合う辺は等しいので、",
       figure: { width: 220, height: 135, pts: PGRAM, segs: ["AB", "BC", "CD", "DA"], sides: [{ segs: ["AB", "DC"], n: 1 }, { segs: ["AD", "BC"], n: 2 }] },
@@ -136,7 +176,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "special", title: "長方形・ひし形・正方形",
+    id: "special", title: "長方形・ひし形・正方形", part: "figures",
     cards: [{
       card: "長方形の角はすべて 90° だから、",
       figure: { width: 220, height: 130, pts: { A: [30, 20], B: [30, 110], C: [190, 110], D: [190, 20] }, segs: ["AB", "BC", "CD", "DA"], rights: ["DAB", "ABC", "BCD", "CDA"], sides: [{ segs: ["AB", "DC"], n: 1 }, { segs: ["AD", "BC"], n: 2 }] },
@@ -164,7 +204,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "advanced", title: "角の和・外角（発展）",
+    id: "advanced", title: "角の和・外角（発展）", part: "figures",
     cards: [{
       card: "$\\angle ACD = 60^\\circ + \\angle ACE$, $\\angle BCE = 60^\\circ + \\angle ACE$ だから、",
       figure: { width: 220, height: 150, pts: { B: [25, 130], C: [115, 130], D: [195, 130], A: [70, 52.1], E: [155, 60.7] }, segs: ["BCD", "AB", "AC", "EC", "ED", "AD", "BE"], angles: [{ angs: ["ACE"], n: 1, r: 18 }] },
@@ -187,41 +227,6 @@ const GROUPS = [
       used: reasonHas(/90\^\\circ - /),
       advanced: true
     }]
-  },
-  {
-    id: "conditions", title: "合同条件",
-    note: "等しい辺や角（①②③）をそろえたら、最後にどれか1つを選んで書きます。カードでは前に「①, ②, ③より、」が自動でつきます。",
-    cards: [{
-      card: "3組の辺がそれぞれ等しいので",
-      figure: { width: 238, height: 130, pts: TWO_TRI, segs: ["AB", "BC", "CA", "DE", "EF", "FD"], sides: [{ segs: ["AB", "DE"], n: 1 }, { segs: ["BC", "EF"], n: 2 }, { segs: ["CA", "FD"], n: 3 }] },
-      example: "$AB = DE$、$BC = EF$、$CA = FD$",
-      when: "辺が3組とも等しいとき。共通な辺を使うことも多いです。",
-      used: conditionIs("3組の辺がそれぞれ等しいので")
-    }, {
-      card: "2組の辺とその間の角がそれぞれ等しいので",
-      figure: { width: 238, height: 130, pts: TWO_TRI, segs: ["AB", "BC", "CA", "DE", "EF", "FD"], sides: [{ segs: ["AB", "DE"], n: 1 }, { segs: ["CA", "FD"], n: 2 }], angles: [{ angs: ["BAC", "EDF"], n: 1 }] },
-      example: "$AB = DE$、$AC = DF$、$\\angle BAC = \\angle EDF$",
-      when: "等しい角が、等しい2組の辺に「はさまれている」ことを必ず確かめよう。",
-      used: conditionIs("2組の辺とその間の角がそれぞれ等しいので")
-    }, {
-      card: "1組の辺とその両端の角がそれぞれ等しいので",
-      figure: { width: 238, height: 130, pts: TWO_TRI, segs: ["AB", "BC", "CA", "DE", "EF", "FD"], sides: [{ segs: ["AB", "DE"], n: 1 }], angles: [{ angs: ["CAB", "FDE"], n: 1 }, { angs: ["ABC", "DEF"], n: 2 }] },
-      example: "$AB = DE$、$\\angle A = \\angle D$、$\\angle B = \\angle E$",
-      when: "等しい2組の角が、等しい辺の「両はし」にあることを確かめよう。",
-      used: conditionIs("1組の辺とその両端の角がそれぞれ等しいので")
-    }, {
-      card: "直角三角形の斜辺と1つの鋭角がそれぞれ等しいので",
-      figure: { width: 238, height: 130, pts: TWO_RIGHT, segs: ["AB", "BC", "CA", "DE", "EF", "FD"], rights: ["ACB", "DFE"], sides: [{ segs: ["AB", "DE"], n: 1 }], angles: [{ angs: ["CAB", "FDE"], n: 1 }] },
-      example: "$\\angle C = \\angle F = 90^\\circ$、$AB = DE$、$\\angle A = \\angle D$",
-      when: "直角三角形で、斜辺（直角の向かいの辺）と、直角でない角1つが等しいとき。直角であることも書きます。",
-      used: conditionIs("直角三角形の斜辺と1つの鋭角がそれぞれ等しいので")
-    }, {
-      card: "直角三角形の斜辺と他の1辺がそれぞれ等しいので",
-      figure: { width: 238, height: 130, pts: TWO_RIGHT, segs: ["AB", "BC", "CA", "DE", "EF", "FD"], rights: ["ACB", "DFE"], sides: [{ segs: ["AB", "DE"], n: 1 }, { segs: ["AC", "DF"], n: 2 }] },
-      example: "$\\angle C = \\angle F = 90^\\circ$、$AB = DE$、$AC = DF$",
-      when: "直角三角形で、斜辺と、もう1つの辺が等しいとき。直角であることも書きます。",
-      used: conditionIs("直角三角形の斜辺と他の1辺がそれぞれ等しいので")
-    }]
   }
 ];
 
@@ -237,7 +242,12 @@ function renderMath(el) {
 function problemLinks(card) {
   const list = allProblems.filter(card.used);
   if (list.length === 0) return "";
-  const links = `<div class="rc-links">${list.map(p => `<a href="index.html?problem=${p.id}" title="${p.unitLabel}">${p.title}${p.tier === "advanced" ? "（発展）" : ""}</a>`).join("")}</div>`;
+  const link = p => `<a href="index.html?problem=${p.id}" title="${p.unitLabel}">${p.title}${p.tier === "advanced" ? "（発展）" : ""}</a>`;
+  // 分野ごとに分けて並べる
+  const byPart = PARTS.map(part => ({ part, items: list.filter(p => p.part === part.key) })).filter(x => x.items.length);
+  const links = byPart.length > 1
+    ? byPart.map(x => `<div class="rc-links-part">${x.part.label}</div><div class="rc-links">${x.items.map(link).join("")}</div>`).join("")
+    : `<div class="rc-links">${list.map(link).join("")}</div>`;
   // 多いときはたたんでおく（タップで開く）
   if (list.length > 6) {
     return `
@@ -265,12 +275,21 @@ function cardHtml(card) {
 }
 
 function render() {
-  $("nav").innerHTML = GROUPS.map(g => `<a href="#${g.id}">${g.title}</a>`).join("");
-  $("groups").innerHTML = GROUPS.map(g => `
-    <section id="${g.id}" class="rc-group">
-      <h2>${g.title}</h2>
-      ${g.note ? `<p class="rc-note">${g.note}</p>` : ""}
-      <div class="rc-grid">${g.cards.map(cardHtml).join("")}</div>
+  // 分野（三角形の合同（基本）／いろいろな図形の合同）ごとに分けて並べる
+  $("nav").innerHTML = PARTS.map(part => GROUPS.filter(g => g.part === part.key)
+    .map(g => `<a href="#${g.id}" class="${part.key === "figures" ? "is-figures" : ""}">${g.title}</a>`).join("")).join('<span class="nav-sep" aria-hidden="true"></span>');
+  $("groups").innerHTML = PARTS.map(part => `
+    <section class="rc-part" aria-labelledby="part-${part.key}">
+      <div class="rc-part-head">
+        <h2 id="part-${part.key}">${part.label}</h2>
+        <p>${part.desc}で使うカード</p>
+      </div>
+      ${GROUPS.filter(g => g.part === part.key).map(g => `
+        <section id="${g.id}" class="rc-group">
+          <h3>${g.title}</h3>
+          ${g.note ? `<p class="rc-note">${g.note}</p>` : ""}
+          <div class="rc-grid">${g.cards.map(cardHtml).join("")}</div>
+        </section>`).join("")}
     </section>`).join("");
   renderMath(document.body);
 }

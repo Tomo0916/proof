@@ -26,6 +26,11 @@
  *   （ステップ1では、この順番で書いたものだけを正解にする）
  * ・問題文では「右の図」ではなく「図で」と書く（スマホでは図が下に出るため）
  * ・仮定で等しいとされた辺・角には、図に印を付ける
+ *
+ * ── 分野 ──
+ * 単元は、教科書の順に2つの分野に分ける（UNIT_PART）。新しい単元を足したら、ここにも書く。
+ *   basic   三角形の合同（基本）   … 三角形の3つの合同条件だけを使う
+ *   figures いろいろな図形の合同   … 二等辺三角形・正三角形・直角三角形・平行四辺形などの性質や、直角三角形の合同条件を使う
  */
 import { prepareProblem } from "../figure.js";
 import { unit1Problems } from "./unit1_parallel.js";
@@ -34,6 +39,20 @@ import { unit3Problems } from "./unit3_isosceles.js";
 import { unit4Problems } from "./unit4_right.js";
 import { unit5Problems } from "./unit5_parallelogram.js";
 import { unit6Problems } from "./unit6_special.js";
+
+export const PARTS = [
+  { key: "basic", label: "三角形の合同（基本）", desc: "三角形の3つの合同条件を使う証明" },
+  { key: "figures", label: "いろいろな図形の合同", desc: "二等辺三角形・正三角形・直角三角形・平行四辺形などの性質を使う証明" }
+];
+const UNIT_PART = {
+  parallel: "basic",
+  common: "basic",
+  isosceles: "figures",
+  right: "figures",
+  parallelogram: "figures",
+  special: "figures"
+};
+const partOf = unit => PARTS.find(pt => pt.key === (UNIT_PART[unit] || "figures"));
 
 export const allProblems = [
   ...unit1Problems,
@@ -51,4 +70,4 @@ export const allProblems = [
     stars: (p.level.match(/★/g) || []).length
   }))
   .sort((a, b) => (a.unit === b.unit ? a.adv - b.adv || a.stars - b.stars || a.i - b.i : a.i - b.i))
-  .map(x => prepareProblem({ ...x.p, tier: x.p.tier || "basic" }));
+  .map(x => prepareProblem({ ...x.p, tier: x.p.tier || "basic", part: partOf(x.p.unit).key, partLabel: partOf(x.p.unit).label }));
