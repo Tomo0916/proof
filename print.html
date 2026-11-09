@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>印刷用プリント | 合同の証明トレーニング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
@@ -15,7 +18,7 @@
     body {
       background: #e2e8f0;
       color: #0f172a;
-      font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+      font-family: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
       font-size: 10.5pt;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -27,7 +30,7 @@
       position: sticky; top: 0; z-index: 10;
       display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
       padding: 10px 16px;
-      background: #1e293b; color: #fff; font-size: 13px;
+      background: #1e3a5f; color: #fff; font-size: 13px;
     }
     .toolbar label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
     .toolbar select { font-size: 13px; padding: 2px 4px; border-radius: 4px; }
@@ -35,7 +38,7 @@
     .toolbar .spacer { flex: 1; }
     .toolbar button {
       font-size: 14px; font-weight: 700; padding: 6px 16px; border: 0; border-radius: 6px; cursor: pointer;
-      background: #10b981; color: #fff;
+      background: #fff; color: #1e3a5f;
     }
     .toolbar a { color: #cbd5e1; font-size: 12px; }
     .empty { padding: 60px 16px; text-align: center; color: #475569; }
@@ -109,7 +112,7 @@
 </head>
 <body>
   <div class="toolbar">
-    <strong>🖨️ 印刷用プリント</strong>
+    <strong>印刷用プリント</strong>
     <span class="info" id="info"></span>
     <label>1ページに
       <select id="opt-per">

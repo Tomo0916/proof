@@ -3,273 +3,246 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
   <title>合同の証明トレーニング</title>
-  <!-- Tailwind CSS CDN（v3） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- KaTeX CDN -->
+  <script src="js/tw-config.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
-  <!-- カスタムスタイル -->
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-indigo-100 selection:text-indigo-800">
+<body class="min-h-screen flex flex-col">
 
-  <!-- ヘッダー -->
-  <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-40">
-    <div class="max-w-4xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row justify-between items-center gap-2">
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="text-xl" aria-hidden="true">📐</span>
-          <h1 class="text-lg sm:text-xl font-bold tracking-tight">合同の証明トレーニング</h1>
-        </div>
-        <p class="text-xs text-indigo-100 mt-0.5">等しい辺や角を見つけてから、証明を組み立てよう</p>
-      </div>
-
-      <div class="flex items-center gap-2 text-xs">
-        <button id="btn-news" type="button" class="relative p-1.5 bg-indigo-700/80 hover:bg-indigo-800 rounded text-base transition" title="お知らせ（アプリが新しくなったところ）" aria-label="お知らせ">
-          <span aria-hidden="true">🔔</span>
-          <span id="news-dot" class="hidden absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-indigo-600"></span>
+  <!-- 上のバー -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html" aria-label="合同の証明トレーニング">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 25 L12 8 L18 25 Z"/><path d="M14 25 L22 8 L28 25 Z" fill="currentColor" fill-opacity="0.15"/></svg></span>
+        <span class="brand-name">合同の証明<span class="brand-sub">トレーニング</span></span>
+      </a>
+      <div class="topbar-actions">
+        <button id="btn-news" type="button" class="icon-btn" title="お知らせ" aria-label="お知らせ">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span id="news-dot" class="icon-dot hidden"></span>
         </button>
-        <button id="btn-feedback" type="button" class="p-1.5 bg-indigo-700/80 hover:bg-indigo-800 rounded text-base transition" title="不具合・要望を送る" aria-label="不具合・要望を送る">
-          <span aria-hidden="true">💬</span>
+        <button id="btn-feedback" type="button" class="icon-btn" title="不具合・要望を送る" aria-label="不具合・要望を送る">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </button>
-        <button id="btn-sound-toggle" type="button" class="p-1.5 bg-indigo-700/80 hover:bg-indigo-800 rounded text-base transition" title="音のON/OFF" aria-label="音のON/OFF">
-          <span id="sound-icon">🔊</span>
+        <button id="btn-sound-toggle" type="button" class="icon-btn" title="音のON/OFF" aria-label="音のON/OFF">
+          <span id="sound-icon" class="inline-flex"></span>
         </button>
-
-        <div class="bg-indigo-700/80 px-2.5 py-1.5 rounded flex items-center gap-2">
-          <span>今日 <strong id="stat-today" class="text-amber-300 font-bold">0</strong> 問</span>
-          <span class="text-indigo-300">|</span>
-          <span title="1日に正解した問題の数の最高記録">最高 <strong id="stat-best" class="text-amber-300 font-bold">0</strong> 問</span>
-        </div>
-
-        <button id="btn-profile" type="button" class="bg-indigo-700/80 hover:bg-indigo-800 px-2.5 py-1.5 rounded font-bold underline decoration-dotted text-indigo-200 hover:text-white transition" title="名前の登録">
+        <button id="btn-profile" type="button" class="name-btn" title="名前の登録">
           <span id="user-display">ゲスト</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- 証明で使う言葉（背景タップ・Escで閉じる） -->
-  <div id="phrases-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="phrases-title">
-    <div class="bg-slate-50 rounded-xl shadow-xl max-w-2xl w-full p-4 sm:p-5 my-4">
-      <div class="flex items-start justify-between gap-2 mb-1">
-        <h3 id="phrases-title" class="text-base font-bold text-slate-800">📚 証明で使う言葉</h3>
-        <button type="button" id="btn-phrases-close" class="remove-btn shrink-0" aria-label="閉じる">✕</button>
+  <main class="page flex-1 w-full">
+
+    <!-- 問題の選択 -->
+    <section class="picker" aria-label="問題の選択">
+      <div class="picker-top">
+        <span class="hint">問題をえらぶ</span>
+        <span class="stats" title="1日に正解した問題の数">今日 <strong id="stat-today">0</strong> 問　最高 <strong id="stat-best">0</strong> 問</span>
       </div>
-      <p class="text-[11px] text-slate-500 mb-3">証明の順番（1 → 4）に並べています。文字（$A$, $B$, …）は問題に合わせて変えて使います。</p>
+      <div class="picker-row">
+        <label class="field">範囲
+          <select id="select-scope" class="select">
+            <option value="basic">定期テスト</option>
+            <option value="advanced">発展（定期テストより難しい）</option>
+            <option value="all">すべて</option>
+          </select>
+        </label>
+        <label class="field">単元
+          <select id="select-unit" class="select"></select>
+        </label>
+      </div>
+      <div class="problem-nav">
+        <button id="btn-prev" type="button" class="nav-btn" aria-label="前の問題">‹</button>
+        <select id="select-problem" class="select" aria-label="問題"></select>
+        <button id="btn-next" type="button" class="nav-btn" aria-label="次の問題">›</button>
+      </div>
+    </section>
+
+    <!-- 問題 -->
+    <section class="problem">
+      <div class="problem-meta">
+        <span id="prob-tier" class="tier-badge"></span>
+        <span id="prob-badge" class="level"></span>
+        <span id="prob-tag"></span>
+      </div>
+      <h1 id="prob-title" class="problem-title"></h1>
+      <div id="prob-statement" class="statement"></div>
+      <div id="prob-figure" class="figure"></div>
+      <div class="helpers">
+        <button type="button" id="btn-template" class="btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+          この問題の証明の型
+        </button>
+        <button type="button" id="btn-phrases" class="btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
+          証明で使う言葉
+        </button>
+      </div>
+    </section>
+
+    <!-- ステップ1：等しい辺や角を書き出す -->
+    <section id="step1" class="step">
+      <div class="step-head">
+        <span class="step-num">1</span>
+        <h2>等しい辺や角を書き出す</h2>
+        <span id="step1-status" class="step-done-badge hidden">正解</span>
+      </div>
+      <p id="step1-prompt" class="step-lead"></p>
+      <p class="hint">1行に1つずつ書きます。例：AB = CD、∠ABC = ∠DEF</p>
+
+      <div id="eq-lines" class="eq-lines"></div>
+
+      <div id="keypad-wrap">
+        <div id="keypad" class="keypad"></div>
+        <p class="hint hidden sm:block mt-2">パソコンのキーボードでも入力できます（∠ は「&lt;」キー、次の行は Enter キー）。</p>
+        <div class="step-actions">
+          <button id="btn-step1-reset" type="button" class="btn-text">全部消す</button>
+          <button id="btn-step1-check" type="button" class="btn-primary">答え合わせ</button>
+        </div>
+      </div>
+
+      <div id="step1-feedback" class="feedback hidden" aria-live="polite"></div>
+    </section>
+
+    <!-- ステップ2：証明を組み立てる -->
+    <section id="step2" class="step">
+      <div class="step-head">
+        <span class="step-num">2</span>
+        <h2>カードで証明を組み立てる</h2>
+        <button id="btn-clear" type="button" class="btn-text hidden">やり直す</button>
+      </div>
+
+      <div id="step2-locked" class="locked">ステップ1に正解すると、ここに進めます。</div>
+
+      <div id="step2-body" class="hidden">
+        <div id="step2-found" class="found"></div>
+
+        <div class="sub-head">
+          <h3>証明</h3>
+          <span class="hint">ドラッグか ▲▼ で並べかえ、✕ で戻す</span>
+        </div>
+        <div id="drop-zone"></div>
+        <p class="hint mt-2">①②③ の番号は上から順に自動でつきます。スマホでは、カードを少し長押ししてからドラッグします。</p>
+
+        <div class="sub-head">
+          <h3>カード</h3>
+          <a href="reasons.html" target="_blank" rel="noopener" class="link text-xs">理由カードの一覧（図つき）</a>
+        </div>
+        <p class="hint mb-2">タップかドラッグで証明に入ります。使わないカードもあります。</p>
+        <div id="palette-zone"></div>
+
+        <button id="btn-check" type="button" class="btn-primary block mt-5">答え合わせ</button>
+        <div id="feedback-area" class="feedback hidden" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <nav aria-label="ほかのページ">
+      <a href="phrases.html">証明で使う言葉</a>
+      <a href="reasons.html">理由カードの一覧</a>
+      <a href="admin.html">管理者ページ</a>
+    </nav>
+    中2数学 合同の証明トレーニング
+  </footer>
+
+  <!-- 証明で使う言葉 -->
+  <div id="phrases-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="phrases-title">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h2 id="phrases-title">証明で使う言葉</h2>
+        <button type="button" id="btn-phrases-close" class="remove-btn" aria-label="閉じる">✕</button>
+      </div>
+      <p class="modal-lead">証明を書く順番（1 → 4）に並べています。文字（$A$, $B$, …）は問題に合わせて変えて使います。</p>
       <div id="phrases-body"></div>
-      <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs font-bold">
-        <a href="reasons.html" target="_blank" rel="noopener" class="text-indigo-700 hover:underline">📖 図つきでくわしく見る ▶</a>
-        <a href="phrases.html" target="_blank" rel="noopener" class="text-indigo-700 hover:underline">🖨️ 1ページで見る・印刷する ▶</a>
+      <div class="flex flex-wrap gap-x-5 gap-y-2 mt-3 text-sm">
+        <a href="reasons.html" target="_blank" rel="noopener" class="link">図つきでくわしく見る</a>
+        <a href="phrases.html" target="_blank" rel="noopener" class="link">1ページで見る・印刷する</a>
       </div>
     </div>
   </div>
 
-  <!-- お知らせ（背景タップ・Escで閉じる） -->
-  <div id="news-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="news-title">
-    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-4 sm:p-5 my-4">
-      <div class="flex items-start justify-between gap-2 mb-3">
-        <h3 id="news-title" class="text-base font-bold text-slate-800">🔔 お知らせ</h3>
-        <button type="button" id="btn-news-close" class="remove-btn shrink-0" aria-label="閉じる">✕</button>
+  <!-- お知らせ -->
+  <div id="news-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="news-title">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h2 id="news-title">お知らせ</h2>
+        <button type="button" id="btn-news-close" class="remove-btn" aria-label="閉じる">✕</button>
       </div>
       <div id="news-body" class="news-list"></div>
     </div>
   </div>
 
-  <!-- 不具合・要望を送る（背景タップ・Escで閉じる） -->
-  <div id="feedback-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
-    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-4 sm:p-5 my-4 space-y-3">
-      <div class="flex items-start justify-between gap-2">
-        <h3 id="feedback-title" class="text-base font-bold text-slate-800">💬 不具合・要望を送る</h3>
-        <button type="button" id="btn-feedback-close" class="remove-btn shrink-0" aria-label="閉じる">✕</button>
+  <!-- 不具合・要望を送る -->
+  <div id="feedback-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h2 id="feedback-title">不具合・要望を送る</h2>
+        <button type="button" id="btn-feedback-close" class="remove-btn" aria-label="閉じる">✕</button>
       </div>
-      <p class="text-xs text-slate-500 leading-relaxed">おかしなところや「こうしてほしい」ということを教えてください。名前は送られません。</p>
-      <div>
-        <div class="text-xs font-bold text-slate-600 mb-1">種類</div>
-        <div id="fb-types" class="flex flex-wrap gap-1.5">
+      <p class="modal-lead">おかしなところや「こうしてほしい」ということを教えてください。名前は送られません。</p>
+      <div class="mb-4">
+        <span class="field-label">種類</span>
+        <div id="fb-types" class="flex flex-wrap gap-2">
           <label class="fb-type"><input type="radio" name="fb-type" value="不具合（うまく動かない）" checked> 不具合（うまく動かない）</label>
           <label class="fb-type"><input type="radio" name="fb-type" value="問題のまちがい"> 問題のまちがい</label>
           <label class="fb-type"><input type="radio" name="fb-type" value="要望（こうしてほしい）"> 要望（こうしてほしい）</label>
           <label class="fb-type"><input type="radio" name="fb-type" value="その他"> その他</label>
         </div>
       </div>
-      <div>
-        <label for="fb-body" class="text-xs font-bold text-slate-600">内容</label>
-        <textarea id="fb-body" rows="5" maxlength="1000" placeholder="例：問3のステップ1で、AB = CD と書いたのに × になった"
-          class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+      <div class="mb-3">
+        <label for="fb-body" class="field-label">内容</label>
+        <textarea id="fb-body" rows="5" maxlength="1000" class="input" placeholder="例：問3のステップ1で、AB = CD と書いたのに × になった"></textarea>
       </div>
-      <details class="text-[11px] text-slate-500">
+      <details class="hint">
         <summary class="cursor-pointer">いっしょに送られる情報（開いている問題など）</summary>
-        <pre id="fb-context" class="mt-1 p-2 bg-slate-50 border border-slate-200 rounded whitespace-pre-wrap break-all font-mono text-[10px] text-slate-600"></pre>
+        <pre id="fb-context" class="mt-2 p-2 rounded-lg bg-slate-50 whitespace-pre-wrap break-all text-[11px] leading-relaxed text-slate-600"></pre>
       </details>
-      <div id="fb-message" class="hidden text-xs rounded-lg border p-2.5"></div>
-      <div class="flex flex-wrap justify-end gap-2 pt-1">
-        <button type="button" id="btn-fb-copy" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded border border-slate-300">内容をコピー</button>
-        <button type="button" id="btn-fb-send" class="px-4 py-1.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold disabled:opacity-40 disabled:cursor-not-allowed">送る</button>
+      <div id="fb-message" class="hidden"></div>
+      <div class="modal-actions">
+        <button type="button" id="btn-fb-copy" class="btn-ghost">内容をコピー</button>
+        <button type="button" id="btn-fb-send" class="btn-primary">送る</button>
       </div>
     </div>
   </div>
 
-  <!-- 証明の型（背景タップ・Escで閉じる） -->
-  <div id="template-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="template-title">
-    <div class="bg-white rounded-xl shadow-xl max-w-xl w-full p-4 sm:p-5 my-4">
-      <div class="flex items-start justify-between gap-2 mb-1">
-        <h3 id="template-title" class="text-base font-bold text-slate-800">📋 この問題の証明の型</h3>
-        <button type="button" id="btn-template-close" class="remove-btn shrink-0" aria-label="閉じる">✕</button>
+  <!-- この問題の証明の型 -->
+  <div id="template-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="template-title">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h2 id="template-title">この問題の証明の型</h2>
+        <button type="button" id="btn-template-close" class="remove-btn" aria-label="閉じる">✕</button>
       </div>
-      <p class="text-[11px] text-slate-500 mb-3">証明は、この順番で書きます。<span class="tpl-blank-sample">（　）</span>の部分を、問題に合わせて考えよう。</p>
-      <div id="template-body"></div>
+      <p class="modal-lead">証明は、この順番で書きます。<span class="tpl-blank-sample">（　）</span>の部分を、問題に合わせて考えよう。</p>
+      <div id="template-body" class="pl-4"></div>
     </div>
   </div>
 
-  <!-- 名前の登録（背景タップ・Escで閉じる / Enterで決定） -->
-  <div id="profile-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="profile-title">
-    <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 space-y-4">
-      <h3 id="profile-title" class="text-base font-bold text-slate-800 flex items-center gap-1.5">
-        <span aria-hidden="true">👤</span> 名前の登録
-      </h3>
-      <p class="text-xs text-slate-500 leading-relaxed">
-        名前や出席番号を入れると、この端末で自分の記録を分けて残せます。空らんにすると「ゲスト」になります。
-      </p>
-      <input type="text" id="input-profile-id" maxlength="12" placeholder="例: 1024、たろう" enterkeyhint="done"
-        class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-      <div class="flex justify-end gap-2 pt-2">
-        <button id="btn-profile-cancel" type="button" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded">やめる</button>
-        <button id="btn-profile-save" type="button" class="px-4 py-1.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold">決定</button>
+  <!-- 名前の登録 -->
+  <div id="profile-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+    <div class="modal-sheet narrow">
+      <div class="modal-head">
+        <h2 id="profile-title">名前の登録</h2>
+      </div>
+      <p class="modal-lead">名前や出席番号を入れると、この端末で自分の記録を分けて残せます。空らんにすると「ゲスト」になります。</p>
+      <input type="text" id="input-profile-id" maxlength="12" placeholder="例: 1024、たろう" enterkeyhint="done" class="input">
+      <div class="modal-actions">
+        <button id="btn-profile-cancel" type="button" class="btn-ghost">やめる</button>
+        <button id="btn-profile-save" type="button" class="btn-primary">決定</button>
       </div>
     </div>
   </div>
-
-  <main class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-5 flex flex-col gap-4">
-
-    <!-- 問題の選択 -->
-    <div class="flex flex-wrap items-center justify-between gap-2 bg-white p-3 rounded-xl shadow-sm border border-slate-200">
-      <div class="flex flex-wrap items-center gap-2">
-        <div class="flex items-center gap-1">
-          <label for="select-scope" class="text-xs font-bold text-slate-500">範囲:</label>
-          <select id="select-scope" class="text-xs font-semibold border border-slate-300 rounded-md px-2 py-1.5 bg-slate-50 focus:ring-2 focus:ring-indigo-500">
-            <option value="basic">定期テスト</option>
-            <option value="advanced">発展（定期テストより難しい）</option>
-            <option value="all">すべて</option>
-          </select>
-        </div>
-        <div class="flex items-center gap-1">
-          <label for="select-unit" class="text-xs font-bold text-slate-500">単元:</label>
-          <select id="select-unit" class="text-xs font-semibold border border-slate-300 rounded-md px-2 py-1.5 bg-slate-50 focus:ring-2 focus:ring-indigo-500"></select>
-        </div>
-        <div class="flex items-center gap-1">
-          <label for="select-problem" class="text-xs font-bold text-slate-500 ml-1">問題:</label>
-          <select id="select-problem" class="text-xs font-semibold border border-slate-300 rounded-md px-2 py-1.5 bg-slate-50 max-w-[220px] truncate focus:ring-2 focus:ring-indigo-500"></select>
-        </div>
-      </div>
-      <div class="flex gap-1.5 ml-auto">
-        <button id="btn-prev" type="button" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 rounded text-xs font-bold border border-slate-300 transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-100 disabled:active:scale-100">◀ 前の問題</button>
-        <button id="btn-next" type="button" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 rounded text-xs font-bold border border-slate-300 transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-100 disabled:active:scale-100">次の問題 ▶</button>
-      </div>
-    </div>
-
-    <!-- 問題 -->
-    <section class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-slate-200">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
-        <div class="flex items-center gap-1.5">
-          <span id="prob-tier" class="tier-badge"></span>
-          <span id="prob-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200"></span>
-        </div>
-        <span id="prob-tag" class="text-xs text-slate-400 font-semibold"></span>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-        <div class="md:col-span-2">
-          <h2 id="prob-title" class="font-bold text-sm sm:text-base text-slate-800 mb-2"></h2>
-          <div id="prob-statement" class="text-xs sm:text-sm text-slate-700 leading-relaxed"></div>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <button type="button" id="btn-template" class="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition">
-              📋 この問題の証明の型を見る
-            </button>
-            <button type="button" id="btn-phrases" class="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-300 hover:bg-sky-100 transition">
-              📚 証明で使う言葉
-            </button>
-          </div>
-        </div>
-        <div id="prob-figure" class="flex justify-center items-center bg-slate-50 p-2 rounded-lg border border-slate-200 min-h-[140px] overflow-hidden"></div>
-      </div>
-    </section>
-
-    <!-- ステップ1：等しい辺や角を書き出す -->
-    <section id="step1" class="step-card bg-white p-4 rounded-xl shadow-sm border-2 border-indigo-200">
-      <div class="flex items-center justify-between gap-2 mb-2">
-        <h3 class="text-sm font-bold text-indigo-950 flex items-center gap-2">
-          <span class="step-label">ステップ1</span>
-          <span>等しい辺や角を書き出そう</span>
-        </h3>
-        <span id="step1-status" class="hidden text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">○ 正解</span>
-      </div>
-
-      <p id="step1-prompt" class="text-xs sm:text-sm text-slate-700 leading-relaxed mb-1"></p>
-      <p class="text-[11px] text-slate-500 mb-3">1行に1つずつ書きます。　例: <span class="font-mono">AB = CD</span>　<span class="font-mono">∠ABC = ∠DEF</span></p>
-
-      <div id="eq-lines" class="flex flex-col gap-1.5 mb-3"></div>
-
-      <div id="keypad-wrap">
-        <div id="keypad" class="flex flex-wrap gap-1.5 justify-center p-2 bg-slate-50 rounded-lg border border-slate-200"></div>
-        <p class="hidden sm:block text-[11px] text-slate-400 text-center mt-1">パソコンのキーボードでも入力できます（∠ は「&lt;」キー、次の行は Enter キー）</p>
-
-        <div class="flex items-center justify-between gap-2 mt-3">
-          <button id="btn-step1-reset" type="button" class="text-xs text-rose-500 hover:text-rose-700 hover:underline font-semibold">↺ 全部消す</button>
-          <button id="btn-step1-check" type="button" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl shadow transition-all">答え合わせ</button>
-        </div>
-      </div>
-
-      <div id="step1-feedback" class="hidden mt-3 p-3 rounded-xl border text-sm leading-relaxed" aria-live="polite"></div>
-    </section>
-
-    <!-- ステップ2：証明を組み立てる -->
-    <section id="step2" class="step-card bg-white p-4 rounded-xl shadow-sm border-2 border-slate-200">
-      <div class="flex items-center justify-between gap-2 mb-2">
-        <h3 class="text-sm font-bold text-indigo-950 flex items-center gap-2">
-          <span class="step-label">ステップ2</span>
-          <span>カードを並べて証明を書こう</span>
-        </h3>
-        <button id="btn-clear" type="button" class="hidden text-xs text-rose-500 hover:text-rose-700 hover:underline font-semibold">↺ やり直す</button>
-      </div>
-
-      <div id="step2-locked" class="text-xs sm:text-sm text-slate-400 text-center py-8 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-        🔒 ステップ1に正解すると、ここに進めます。
-      </div>
-
-      <div id="step2-body" class="hidden">
-        <div id="step2-found" class="text-xs text-slate-600 bg-indigo-50/60 border border-indigo-100 rounded-lg px-3 py-2 mb-3"></div>
-
-        <div class="flex items-center justify-between mb-1">
-          <h4 class="text-xs font-bold text-slate-700">📝 証明</h4>
-          <span class="text-[11px] text-slate-500 text-right">ドラッグか▲▼で順番を変える ／ ✕でカードを戻す</span>
-        </div>
-        <div id="drop-zone" class="min-h-[160px] p-2 sm:p-3 bg-indigo-50/40 rounded-lg border-2 border-dashed border-indigo-300 flex flex-col gap-2"></div>
-        <p class="text-[11px] text-slate-500 mt-1">※ 等しい辺や角の式には、①②③…の番号が上から順に自動でつきます。<br>※ スマホでは、カードを少し長押ししてからドラッグします。</p>
-
-        <div class="flex items-center justify-between mt-4 mb-1">
-          <h4 class="text-xs font-bold text-slate-700 flex items-center gap-2">🃏 カード <a href="reasons.html" target="_blank" rel="noopener" class="font-normal text-[11px] text-indigo-600 hover:underline">📖 理由カードの一覧（図つき）</a></h4>
-          <span class="text-[11px] text-slate-500 text-right">タップかドラッグで証明に入ります（使わないカードもあります）</span>
-        </div>
-        <div id="palette-zone" class="flex flex-wrap gap-2 p-2 bg-slate-50 rounded-lg min-h-[80px] border border-slate-200"></div>
-
-        <div class="flex justify-center mt-4">
-          <button id="btn-check" type="button" class="w-full sm:w-72 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl shadow transition-all">答え合わせ</button>
-        </div>
-
-        <div id="feedback-area" class="hidden mt-3 p-4 rounded-xl border text-sm leading-relaxed" aria-live="polite"></div>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="text-center py-4 text-xs text-slate-400 border-t bg-white mt-auto">
-    中2数学 合同の証明トレーニング &copy;
-    <a href="phrases.html" class="ml-3 text-slate-400 hover:text-indigo-600 underline decoration-dotted">証明で使う言葉</a>
-    <a href="reasons.html" class="ml-3 text-slate-400 hover:text-indigo-600 underline decoration-dotted">理由カードの一覧</a>
-    <a href="admin.html" class="ml-3 text-slate-400 hover:text-indigo-600 underline decoration-dotted">管理者ページ</a>
-  </footer>
 
   <script type="module" src="js/main.js"></script>
 </body>

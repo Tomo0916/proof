@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>証明で使う言葉 | 合同の証明トレーニング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tw-config.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
@@ -35,36 +39,37 @@
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
-  <header class="no-print bg-indigo-600 text-white shadow-md sticky top-0 z-40">
-    <div class="max-w-4xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <span class="text-xl" aria-hidden="true">📚</span>
-        <h1 class="text-lg font-bold">証明で使う言葉</h1>
-      </div>
-      <div class="flex gap-1.5">
-        <button type="button" id="btn-print" class="text-xs bg-emerald-500 hover:bg-emerald-600 px-3 py-1.5 rounded font-bold">🖨️ 印刷する</button>
-        <a href="reasons.html" class="text-xs bg-indigo-700/80 hover:bg-indigo-800 px-3 py-1.5 rounded font-bold">📖 図つき</a>
-        <a href="index.html" class="text-xs bg-indigo-700/80 hover:bg-indigo-800 px-3 py-1.5 rounded font-bold">← 問題にもどる</a>
+<body class="min-h-screen flex flex-col">
+  <header class="topbar no-print">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html" aria-label="アプリにもどる">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 25 L12 8 L18 25 Z"/><path d="M14 25 L22 8 L28 25 Z" fill="currentColor" fill-opacity="0.15"/></svg></span>
+        <span class="brand-name">証明で使う言葉</span>
+      </a>
+      <div class="topbar-actions">
+        <button type="button" id="btn-print" class="top-link">印刷する</button>
+        <a href="reasons.html" class="top-link hide-sm">図つき</a>
+        <a href="index.html" class="top-link">問題にもどる</a>
       </div>
     </div>
   </header>
 
-  <main class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-5">
+  <main class="page flex-1 w-full pt-5">
     <!-- 印刷したときだけ出る見出し -->
     <div class="print-title hidden items-end justify-between border-b-2 border-slate-800 pb-1 mb-2">
       <div class="text-base font-bold">合同の証明　証明で使う言葉</div>
       <div class="text-xs">　　組　　番　名前 ＿＿＿＿＿＿＿＿</div>
     </div>
-    <p class="no-print text-xs sm:text-sm text-slate-600 leading-relaxed bg-white border border-slate-200 rounded-xl p-3 mb-3">
+    <p class="no-print text-sm text-slate-600 leading-relaxed mb-2">
       合同の証明で使う言い方を、証明を書く順番（1 → 4）にまとめました。文字（$A$, $B$, …）は問題に合わせて変えて使います。
       「よく使う」は、このアプリの問題でたくさん出てくる言い方です。
     </p>
     <div id="phrases"></div>
   </main>
 
-  <footer class="no-print text-center py-4 text-xs text-slate-400 border-t bg-white mt-auto">
-    中2数学 合同の証明トレーニング｜証明で使う言葉
+  <footer class="site-footer no-print">
+    <nav aria-label="ほかのページ"><a href="index.html">問題を解く</a><a href="reasons.html">理由カードの一覧</a></nav>
+    中2数学 合同の証明トレーニング
   </footer>
 
   <script type="module">

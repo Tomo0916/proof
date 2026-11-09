@@ -220,7 +220,10 @@ function updateStatsUI() {
 
 function updateSoundUI() {
   const on = Storage.getSoundEnabled();
-  dom.soundIcon.textContent = on ? "🔊" : "🔇";
+  dom.soundIcon.innerHTML = on
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>';
+  dom.btnSoundToggle.title = on ? "音：ON（タップで消す）" : "音：OFF（タップで出す）";
   dom.btnSoundToggle.setAttribute("aria-pressed", on ? "true" : "false");
 }
 
@@ -555,7 +558,7 @@ function checkStep1() {
 
   if (s.lines.every(l => l.trim() === "")) {
     Sound.playNotice();
-    showFeedback(dom.step1Feedback, "warning", feedbackHtml("⚠️ まだ何も書いていません", "下のボタンを使って、等しい辺や角を書きましょう。"));
+    showFeedback(dom.step1Feedback, "warning", feedbackHtml("まだ何も書いていません", "下のボタンを使って、等しい辺や角を書きましょう。"));
     return;
   }
 
@@ -592,7 +595,7 @@ function checkStep1() {
     Sound.playSuccess();
     renderStep1();
     showFeedback(dom.step1Feedback, "success", feedbackHtml(
-      "🎉 正解！ 等しい辺や角をすべて見つけられました。",
+      "正解！ 等しい辺や角をすべて見つけられました。",
       "次は、ステップ2でこれを使って証明を組み立てましょう。"
     ));
     renderStepLock();
@@ -721,7 +724,7 @@ function renderPieces() {
     const last = state.answer.length - 1;
     state.answer.forEach((piece, index) => {
       const card = document.createElement("div");
-      card.className = "phrase-card drop-item px-3 py-2 rounded-lg text-xs sm:text-sm font-medium";
+      card.className = "phrase-card drop-item";
       card.dataset.dragSrc = "answer";
       card.dataset.index = String(index);
       if (piece.id === state.lastMovedId) card.classList.add("just-moved");
@@ -748,7 +751,7 @@ function renderPieces() {
   state.palette.forEach((piece, index) => {
     const card = document.createElement("button");
     card.type = "button";
-    card.className = "phrase-card palette-item px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-800";
+    card.className = "phrase-card palette-item";
     card.dataset.dragSrc = "palette";
     card.dataset.index = String(index);
     card.innerHTML = `<span>${piece.text}</span>`;
@@ -770,7 +773,7 @@ function checkStep2() {
   const n = ans.length;
 
   if (n === 0) {
-    failStep2("warning", "⚠️ まだカードがありません", "下のカードをタップして、証明を組み立てましょう。");
+    failStep2("warning", "まだカードがありません", "下のカードをタップして、証明を組み立てましょう。");
     return;
   }
 
@@ -851,11 +854,11 @@ function checkStep2() {
 function showStep2Success({ counted = true, fromRestore = false } = {}) {
   const hasNext = state.index < state.filteredProblems.length - 1;
   showFeedback(dom.feedbackArea, "success", `
-    <div class="font-bold text-base mb-1">🎉 正解！ 証明が書けました。</div>
+    <div class="font-bold text-base mb-1">正解！ 証明が書けました。</div>
     ${counted || fromRestore ? "" : `<p class="text-[11px] text-emerald-700/80 mb-2">※この問題は今日すでに正解しているので、今日の問題数は増えません。</p>`}
     <p class="text-xs sm:text-sm mb-3">${state.prob.explanation}</p>
     <div class="bg-white/80 p-2.5 rounded-lg border border-emerald-300 text-xs text-slate-700 space-y-1">
-      <div class="font-bold text-emerald-900 mb-1">📘 合同の証明の書き方</div>
+      <div class="font-bold text-emerald-900 mb-1">合同の証明の書き方</div>
       <div><span class="flow-badge flow-target mr-1">1</span> どの三角形について考えるかを書く（△… と △… において）</div>
       <div><span class="flow-badge flow-fact mr-1">2</span> 理由を書いてから、等しい辺や角を書く（①②③）</div>
       <div><span class="flow-badge flow-condition mr-1">3</span> 使った合同条件を書く（①, ②, ③より、…）</div>
@@ -1073,29 +1076,33 @@ function templateHtml(prob) {
   return `
     <div class="tpl">
       <div class="tpl-sec s1">
-        <div class="tpl-tag">1<br>三角形を<br>示す</div>
+        <div class="tpl-tag">1</div>
         <div class="tpl-body">
+          <div class="tpl-title">三角形を示す</div>
           <div class="tpl-line">$\\triangle ${t1}$ と $\\triangle ${t2}$ において</div>
           <div class="tpl-note">どの三角形とどの三角形について考えるかを、最初に書きます。</div>
         </div>
       </div>
       <div class="tpl-sec s2">
-        <div class="tpl-tag">2<br>理由と<br>等しい辺・角</div>
+        <div class="tpl-tag">2</div>
         <div class="tpl-body">
+          <div class="tpl-title">理由と等しい辺・角</div>
           ${reasonLines}
           <div class="tpl-note">理由を書いてから、等しい辺や角を書きます。「=」の左に $\\triangle ${t1}$、右に $\\triangle ${t2}$ の辺や角。この問題では ${n} つ見つけます。</div>
         </div>
       </div>
       <div class="tpl-sec s3">
-        <div class="tpl-tag">3<br>合同条件</div>
+        <div class="tpl-tag">3</div>
         <div class="tpl-body">
+          <div class="tpl-title">合同条件</div>
           <div class="tpl-line"><span class="tpl-num">${nums}より、</span>${blank("合同条件")}がそれぞれ等しいので</div>
           <div class="tpl-note">見つけた ${nums} をまとめて、どの合同条件にあてはまるかを書きます。</div>
         </div>
       </div>
       <div class="tpl-sec s4">
-        <div class="tpl-tag">4<br>結論</div>
+        <div class="tpl-tag">4</div>
         <div class="tpl-body">
+          <div class="tpl-title">結論</div>
           <div class="tpl-line">$\\triangle ${t1} \\equiv \\triangle ${t2}$</div>
           <div class="tpl-note">最後に、2つの三角形が合同であることを書きます（頂点は対応する順に）。</div>
         </div>
@@ -1110,7 +1117,7 @@ function templateHtml(prob) {
         <h4>合同条件</h4>
         <div class="tpl-chips">${CONDITIONS.map(c => `<span>${c}がそれぞれ等しい</span>`).join("")}</div>
       </div>
-      <a href="reasons.html" target="_blank" rel="noopener" class="text-xs font-bold text-indigo-700 hover:underline">📖 理由カードを図つきでくわしく見る ▶</a>
+      <a href="reasons.html" target="_blank" rel="noopener" class="link text-sm">理由カードを図つきでくわしく見る</a>
     </div>`;
 }
 

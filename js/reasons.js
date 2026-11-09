@@ -28,7 +28,7 @@ const conditionIs = text => p => p.proof.condition === text;
  */
 const GROUPS = [
   {
-    id: "given", title: "問題文に書いてあること", icon: "📝",
+    id: "given", title: "問題文に書いてあること",
     cards: [{
       card: "仮定より、",
       figure: { width: 200, height: 130, pts: { A: [30, 25], C: [30, 105], D: [170, 25], B: [170, 105], O: [100, 65] }, segs: ["AOB", "COD"], sides: [{ segs: ["AO", "OB"], n: 1 }], labels: { O: [0, -13] } },
@@ -44,7 +44,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "lines", title: "交わる直線・平行線", icon: "✖️",
+    id: "lines", title: "交わる直線・平行線",
     cards: [{
       card: "対頂角は等しいので、",
       figure: { width: 200, height: 130, pts: { A: [30, 25], B: [170, 105], C: [30, 105], D: [170, 25], O: [100, 65] }, segs: ["AOB", "COD"], angles: [{ angs: ["AOC", "BOD"], n: 1 }], labels: { O: [0, -13] } },
@@ -66,7 +66,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "common", title: "共通な辺・角", icon: "🤝",
+    id: "common", title: "共通な辺・角",
     cards: [{
       card: "共通な辺だから、",
       figure: { width: 220, height: 150, pts: { A: [110, 18], B: [45, 72], C: [110, 128], D: [175, 72] }, segs: ["AB", "BC", "CD", "DA", "AC"], highlights: ["AC"] },
@@ -82,7 +82,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "mid", title: "中点・二等分線", icon: "✂️",
+    id: "mid", title: "中点・二等分線",
     cards: [{
       card: "$M$ は線分 $AB$ の中点だから、",
       figure: { width: 200, height: 70, pts: { A: [25, 40], M: [100, 40], B: [175, 40] }, segs: ["AMB"], sides: [{ segs: ["AM", "MB"], n: 1 }] },
@@ -98,7 +98,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "triangle", title: "二等辺三角形・正三角形", icon: "🔺",
+    id: "triangle", title: "二等辺三角形・正三角形",
     cards: [{
       card: "二等辺三角形の底角は等しいので、",
       figure: { width: 200, height: 142, pts: { A: [100, 22], B: [35, 125], C: [165, 125] }, segs: ["AB", "AC", "BC"], sides: [{ segs: ["AB", "AC"], n: 1 }], angles: [{ angs: ["ABC", "BCA"], n: 1 }] },
@@ -114,7 +114,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "pgram", title: "平行四辺形", icon: "▱",
+    id: "pgram", title: "平行四辺形",
     cards: [{
       card: "平行四辺形の向かい合う辺は等しいので、",
       figure: { width: 220, height: 135, pts: PGRAM, segs: ["AB", "BC", "CD", "DA"], sides: [{ segs: ["AB", "DC"], n: 1 }, { segs: ["AD", "BC"], n: 2 }] },
@@ -136,7 +136,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "special", title: "長方形・ひし形・正方形", icon: "⬜",
+    id: "special", title: "長方形・ひし形・正方形",
     cards: [{
       card: "長方形の角はすべて 90° だから、",
       figure: { width: 220, height: 130, pts: { A: [30, 20], B: [30, 110], C: [190, 110], D: [190, 20] }, segs: ["AB", "BC", "CD", "DA"], rights: ["DAB", "ABC", "BCD", "CDA"], sides: [{ segs: ["AB", "DC"], n: 1 }, { segs: ["AD", "BC"], n: 2 }] },
@@ -164,7 +164,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "advanced", title: "角の和・外角（発展）", icon: "🚀",
+    id: "advanced", title: "角の和・外角（発展）",
     cards: [{
       card: "$\\angle ACD = 60^\\circ + \\angle ACE$, $\\angle BCE = 60^\\circ + \\angle ACE$ だから、",
       figure: { width: 220, height: 150, pts: { B: [25, 130], C: [115, 130], D: [195, 130], A: [70, 52.1], E: [155, 60.7] }, segs: ["BCD", "AB", "AC", "EC", "ED", "AD", "BE"], angles: [{ angs: ["ACE"], n: 1, r: 18 }] },
@@ -189,7 +189,7 @@ const GROUPS = [
     }]
   },
   {
-    id: "conditions", title: "合同条件", icon: "🟰",
+    id: "conditions", title: "合同条件",
     note: "等しい辺や角（①②③）をそろえたら、最後にどれか1つを選んで書きます。カードでは前に「①, ②, ③より、」が自動でつきます。",
     cards: [{
       card: "3組の辺がそれぞれ等しいので",
@@ -265,10 +265,10 @@ function cardHtml(card) {
 }
 
 function render() {
-  $("nav").innerHTML = GROUPS.map(g => `<a href="#${g.id}">${g.icon} ${g.title}</a>`).join("");
+  $("nav").innerHTML = GROUPS.map(g => `<a href="#${g.id}">${g.title}</a>`).join("");
   $("groups").innerHTML = GROUPS.map(g => `
     <section id="${g.id}" class="rc-group">
-      <h2>${g.icon} ${g.title}</h2>
+      <h2>${g.title}</h2>
       ${g.note ? `<p class="rc-note">${g.note}</p>` : ""}
       <div class="rc-grid">${g.cards.map(cardHtml).join("")}</div>
     </section>`).join("");
