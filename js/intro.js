@@ -422,16 +422,29 @@ function loadProgress() {
 }
 let progress = loadProgress();
 
+// cleared：いまの回をクリアしたか / clears：これまでにクリアした回数（「もう一度練習する」をおしても残る）
 function lessonProgress(lesson, courseKey = current.course) {
   const rec = (progress[courseKey] || {})[lesson.id] || {};
+  const past = rec.clears || 0;
   if (lesson.levels) {
     const levels = lesson.levels.map(lv => Math.min((rec.levels || {})[lv] || 0, lesson.goalPerLevel));
     const done = levels.reduce((a, b) => a + b, 0);
     const goal = lesson.levels.length * lesson.goalPerLevel;
-    return { done, goal, cleared: done >= goal, levels };
+    const cleared = done >= goal;
+    return { done, goal, cleared, levels, clears: past + (cleared ? 1 : 0) };
   }
   const done = Math.min(rec.correct || 0, lesson.goal);
-  return { done, goal: lesson.goal, cleared: done >= lesson.goal };
+  const cleared = done >= lesson.goal;
+  return { done, goal: lesson.goal, cleared, clears: past + (cleared ? 1 : 0) };
+}
+
+// クリアした練習を、0問目からもう一度（クリアした回数は残す）
+function restartLesson(lesson) {
+  const pr = lessonProgress(lesson);
+  if (!pr.cleared) return;
+  const box = progress[current.course] = progress[current.course] || {};
+  box[lesson.id] = { clears: pr.clears };
+  Storage.saveIntro(progress);
 }
 
 function recordCorrect(lesson, level) {
@@ -459,7 +472,8 @@ function progressBar({ done, goal }) {
   return `<div class="ip-bar"><span style="width:${pct}%"></span></div>`;
 }
 
-const courseCleared = key => LESSONS.filter(l => lessonProgress(l, key).cleared).length;
+const courseCleared = key => LESSONS.filter(l => lessonProgress(l, key).clears > 0).length;
+const clearsText = pr => (pr.clears > 1 ? `クリア（${pr.clears}回）` : "クリア");
 
 function renderHome() {
   state.lesson = null;
@@ -486,12 +500,12 @@ function renderHome() {
         const pr = lessonProgress(l);
         return `
         <li>
-          <a class="lesson ${pr.cleared ? "is-cleared" : ""}" href="#${c.key}/${l.id}">
-            <span class="lesson-num">${pr.cleared ? "✓" : i + 1}</span>
+          <a class="lesson ${pr.clears ? "is-cleared" : ""}" href="#${c.key}/${l.id}">
+            <span class="lesson-num">${pr.clears ? "✓" : i + 1}</span>
             <span class="lesson-body">
               <span class="lesson-title">${l.title}</span>
               <span class="lesson-desc">${l.desc}</span>
-              <span class="lesson-progress">${progressBar(pr)}<span>${pr.cleared ? "クリア" : `${pr.done} / ${pr.goal}`}</span></span>
+              <span class="lesson-progress">${progressBar(pr)}<span>${pr.cleared ? clearsText(pr) : `${pr.done} / ${pr.goal}${pr.clears ? `（${clearsText(pr)}）` : ""}`}</span></span>
             </span>
             <span class="lesson-go" aria-hidden="true">›</span>
           </a>
@@ -531,6 +545,11 @@ function renderLesson() {
       <span class="lesson-count">${pr.cleared ? "クリア！" : `正解 ${pr.done} / ${pr.goal}`}</span>
     </div>
     ${progressBar(pr)}
+    ${pr.cleared ? `
+    <div class="lesson-again">
+      <span>この練習はクリアしています${pr.clears > 1 ? `（${pr.clears}回）` : ""}。0問目からもう一度練習できます。クリアした記録は残ります。</span>
+      <button type="button" class="btn-ghost" data-act="restart">もう一度練習する</button>
+    </div>` : pr.clears ? `<p class="hint mt-2">これまでに ${pr.clears} 回クリアしています。</p>` : ""}
     <p class="lesson-lead">${lesson.desc}</p>
     ${levelTabs}
     <div id="question"></div>`;
@@ -775,6 +794,7 @@ view.addEventListener("click", e => {
   else if (t.dataset.slot !== undefined) tapSlot(Number(t.dataset.slot));
   else if (t.dataset.level !== undefined) { state.level = Number(t.dataset.level); state.q = null; renderLesson(); }
   else if (t.dataset.act === "next") { state.q = null; renderLesson(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  else if (t.dataset.act === "restart") { restartLesson(state.lesson); state.q = null; state.level = 1; renderLesson(); }
   else if (t.dataset.act === "check-fill") checkFill();
   else if (t.dataset.act === "check-guided") checkGuided();
 });

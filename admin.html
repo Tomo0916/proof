@@ -20,6 +20,9 @@
     .st-step2 { background: #e0e7ff; color: #4338ca; }
     .st-step1 { background: #fef3c7; color: #b45309; }
     .st-none  { background: #f1f5f9; color: #cbd5e1; }
+    .ans-btn { display: inline-flex; align-items: center; gap: 3px; cursor: pointer; border-radius: 6px; padding: 1px 3px; }
+    .ans-btn:hover, .ans-btn:focus-visible { background: #eef2f7; }
+    .ans-btn small { font-size: 10px; color: #64748b; text-decoration: underline; }
     .matrix th.sticky-col, .matrix td.sticky-col { position: sticky; left: 0; background: #ffffff; z-index: 1; }
     .matrix tr.unit-row td { background: #f8fafc; }
     .prob-row { cursor: pointer; }
@@ -98,6 +101,8 @@
             <tbody id="matrix-body"></tbody>
           </table>
         </div>
+        <p class="text-[11px] text-slate-500 mt-2">「○回」と書いてあるところをおすと、その人が正解したときの回答（過去の回答）が下に出ます。「もう一度とく」でとき直しても、前の回答は残ります。</p>
+        <div id="answers-panel" class="hidden mt-3 border-t border-slate-200 pt-3"></div>
       </div>
     </section>
 

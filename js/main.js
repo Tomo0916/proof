@@ -1,5 +1,6 @@
 import { allProblems, PARTS } from "./problems/index.js";
 import { Storage } from "./storage.js";
+import { historyHtml } from "./history.js";
 import { readEquality, segmentOrderFix, texToPlain, formatPlain } from "./notation.js";
 import { setupCardDrag } from "./drag.js";
 import { NEWS, TAG_LABEL } from "./news.js";
@@ -138,6 +139,13 @@ const dom = {
   btnProfile: $("btn-profile"),
   profileModal: $("profile-modal"),
   templateModal: $("template-modal"),
+  historyModal: $("history-modal"),
+  historyBody: $("history-body"),
+  btnHistory: $("btn-history"),
+  btnHistoryLabel: $("btn-history-label"),
+  btnHistoryClose: $("btn-history-close"),
+  btnRetryAll: $("btn-retry-all"),
+  retryAllMsg: $("retry-all-msg"),
   phrasesModal: $("phrases-modal"),
   phrasesBody: $("phrases-body"),
   btnPhrases: $("btn-phrases"),
@@ -460,9 +468,78 @@ function loadProblem(index) {
   renderStep1();
   renderStepLock();
   renderPieces();
-  if (state.solved) showStep2Success({ fromRestore: true });
+  if (state.solved) {
+    // 過去の回答を残すしくみができる前に正解していた答えも、記録に入れておく
+    if (attemptsOf(prob.id).length === 0) recordAttempt(null);
+    showStep2Success({ fromRestore: true });
+  }
+  updateHistoryButton();
   renderMath(dom.probStatement, dom.step1Prompt);
   saveWork();
+}
+
+// ============================================================
+// 過去の回答 と 「もう一度とく」
+// ============================================================
+const attemptsOf = problemId => {
+  const list = Storage.loadHistory()[problemId];
+  return Array.isArray(list) ? list : [];
+};
+
+// いまの答え（正解したもの）を、過去の回答として残す
+function recordAttempt(at = new Date().toISOString()) {
+  const s = state.step1;
+  const written = sec => s.lines.filter((l, i) => s.secs[i] === sec && l.trim() && s.results[i] && s.results[i].mark !== "ng");
+  Storage.addHistory(state.prob.id, {
+    at,
+    given: written("given"),
+    hidden: written("hidden"),
+    proof: state.answer.map((p, i) => displayText(p, i))
+  });
+}
+
+function updateHistoryButton() {
+  const n = attemptsOf(state.prob.id).length;
+  dom.btnHistory.classList.toggle("hidden", n === 0);
+  dom.btnHistoryLabel.textContent = `過去の回答（${n}回）`;
+}
+
+// この問題を、最初からとき直す（正解の記録と過去の回答は残る）
+function retryProblem() {
+  Storage.clearWork(state.prob.id);
+  loadProblem(state.index);
+  dom.step1.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function openHistoryModal() {
+  dom.historyBody.innerHTML = historyHtml(attemptsOf(state.prob.id));
+  dom.historyModal.classList.remove("hidden");
+  renderMath(dom.historyBody);
+  dom.btnHistoryClose.focus();
+}
+
+function closeHistoryModal() {
+  dom.historyModal.classList.add("hidden");
+  dom.btnHistory.focus();
+}
+
+// すべての問題をとき直す（まちがえておさないよう、2回おして実行する）
+let retryAllArmed = false;
+function retryAll() {
+  if (!retryAllArmed) {
+    retryAllArmed = true;
+    dom.btnRetryAll.textContent = "もう一度おすと、全部の答えを空にします";
+    return;
+  }
+  Storage.clearWork();
+  loadProblem(state.index);
+  resetRetryAll();
+  dom.retryAllMsg.textContent = "すべての問題を、最初からとけるようにしました。";
+}
+function resetRetryAll() {
+  retryAllArmed = false;
+  dom.btnRetryAll.textContent = "すべての問題をもう一度とく";
+  dom.retryAllMsg.textContent = "";
 }
 
 // ============================================================
@@ -1043,6 +1120,8 @@ function checkStep2() {
   renderProblemOptions();
   state.solved = true;
   saveWork();
+  recordAttempt();
+  updateHistoryButton();
   showStep2Success({ counted });
 }
 
@@ -1060,8 +1139,13 @@ function showStep2Success({ counted = true, fromRestore = false } = {}) {
       <div><span class="flow-badge flow-condition mr-1">3</span> 使った合同条件を書く（①, ②, ③より、…）</div>
       <div><span class="flow-badge flow-conclusion mr-1">4</span> 合同であることを書く（△… ≡ △…）</div>
     </div>
-    ${hasNext ? `<div class="flex justify-end mt-3"><button type="button" id="btn-go-next" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg">次の問題へ ▶</button></div>` : ""}
+    <div class="flex flex-wrap justify-end gap-2 mt-3">
+      <button type="button" id="btn-retry" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg">もう一度とく</button>
+      ${hasNext ? `<button type="button" id="btn-go-next" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg">次の問題へ ▶</button>` : ""}
+    </div>
+    <p class="text-[11px] text-emerald-700/80 mt-2 text-right">「もう一度とく」をおしても、この答えは「過去の回答」に残ります。</p>
   `);
+  document.getElementById("btn-retry").addEventListener("click", () => { Sound.playClick(); retryProblem(); });
   const goNext = document.getElementById("btn-go-next");
   if (goNext) {
     goNext.addEventListener("click", () => {
@@ -1076,7 +1160,7 @@ function showStep2Success({ counted = true, fromRestore = false } = {}) {
 // 名前の登録
 // ============================================================
 function isModalOpen() {
-  return [dom.profileModal, dom.templateModal, dom.phrasesModal, dom.newsModal, dom.feedbackModal]
+  return [dom.profileModal, dom.templateModal, dom.historyModal, dom.phrasesModal, dom.newsModal, dom.feedbackModal]
     .some(m => !m.classList.contains("hidden"));
 }
 
@@ -1332,6 +1416,7 @@ function closeTemplateModal() {
 function openProfileModal() {
   const user = Storage.getActiveUser();
   dom.inputProfileId.value = user === "guest" ? "" : user;
+  resetRetryAll();
   dom.profileModal.classList.remove("hidden");
   setTimeout(() => dom.inputProfileId.focus(), 0);
 }
@@ -1454,6 +1539,10 @@ function initEvents() {
     if (e.target === dom.profileModal) closeProfileModal();
   });
   // --- 証明の型 ---
+  dom.btnHistory.addEventListener("click", () => { Sound.playClick(); openHistoryModal(); });
+  dom.btnHistoryClose.addEventListener("click", () => { Sound.playClick(); closeHistoryModal(); });
+  dom.historyModal.addEventListener("click", e => { if (e.target === dom.historyModal) closeHistoryModal(); });
+  dom.btnRetryAll.addEventListener("click", () => { Sound.playClick(); retryAll(); });
   dom.btnTemplate.addEventListener("click", () => { Sound.playClick(); openTemplateModal(); });
   dom.btnTemplateClose.addEventListener("click", () => { Sound.playClick(); closeTemplateModal(); });
   dom.templateModal.addEventListener("click", e => {
@@ -1480,6 +1569,7 @@ function initEvents() {
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
     if (!dom.templateModal.classList.contains("hidden")) closeTemplateModal();
+    if (!dom.historyModal.classList.contains("hidden")) closeHistoryModal();
     else if (!dom.phrasesModal.classList.contains("hidden")) closePhrasesModal();
     else if (!dom.newsModal.classList.contains("hidden")) closeNewsModal();
     else if (!dom.feedbackModal.classList.contains("hidden")) closeFeedbackModal();

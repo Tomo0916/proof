@@ -127,11 +127,41 @@ export const Storage = {
     return { problems: {} };
   },
 
+  /**
+   * 過去の回答（正解したときの答え）。名前ごとに保存する。「もう一度とく」でも消さない
+   * { [問題id]: [ { at, given, hidden, proof }, ... ] }（古い順。1問につき20回分まで）
+   */
+  loadHistory(userId) {
+    const user = userId || this.getActiveUser();
+    try {
+      const h = JSON.parse(safeStore.get(`${STORAGE_PREFIX}history_${user}`));
+      return h && typeof h === "object" ? h : {};
+    } catch {
+      return {};
+    }
+  },
+
+  addHistory(problemId, entry) {
+    const h = this.loadHistory();
+    const list = Array.isArray(h[problemId]) ? h[problemId] : [];
+    list.push(entry);
+    h[problemId] = list.slice(-20);
+    safeStore.set(`${STORAGE_PREFIX}history_${this.getActiveUser()}`, JSON.stringify(h));
+  },
+
+  /** 途中経過だけを消す（正解の記録と過去の回答は残す）。problemId を省くと全部の問題 */
+  clearWork(problemId) {
+    const work = this.loadWork();
+    if (problemId) delete work.problems[problemId];
+    else work.problems = {};
+    this.saveWork(work);
+  },
+
   /** この端末に記録がある人の一覧（管理者ページ用） */
   listUsers() {
     const users = new Set();
     safeStore.keys().forEach(k => {
-      const m = k.match(new RegExp(`^${STORAGE_PREFIX}(data|work|intro)_(.+)$`));
+      const m = k.match(new RegExp(`^${STORAGE_PREFIX}(data|work|intro|history)_(.+)$`));
       if (m) users.add(m[2]);
     });
     return [...users].sort((a, b) => (a === "guest" ? -1 : b === "guest" ? 1 : a.localeCompare(b, "ja")));
@@ -142,6 +172,7 @@ export const Storage = {
     safeStore.remove(`${STORAGE_PREFIX}data_${userId}`);
     safeStore.remove(`${STORAGE_PREFIX}work_${userId}`);
     safeStore.remove(`${STORAGE_PREFIX}intro_${userId}`);
+    safeStore.remove(`${STORAGE_PREFIX}history_${userId}`);
   },
 
   saveWork(work, userId) {

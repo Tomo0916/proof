@@ -5,6 +5,7 @@
  */
 import { allProblems, PARTS } from "./problems/index.js";
 import { Storage } from "./storage.js";
+import { historyHtml } from "./history.js";
 import { texToPlain } from "./notation.js";
 import { modelProofLines, shortCondition } from "./proof-text.js";
 
@@ -57,10 +58,11 @@ function loadUsers() {
   return Storage.listUsers().map(id => {
     const data = Storage.loadData(id);
     const work = Storage.loadWork(id);
+    const history = Storage.loadHistory(id);
     const statuses = new Map(allProblems.map(p => [p.id, statusOf(p.id, data, work)]));
     const done = allProblems.filter(p => statuses.get(p.id).code === "done");
     return {
-      id, data, work, statuses,
+      id, data, work, statuses, history,
       done: done.length,
       doneBasic: done.filter(p => p.tier !== "advanced").length,
       doneAdvanced: done.filter(p => p.tier === "advanced").length,
@@ -145,7 +147,12 @@ function renderMatrix(users) {
           </td>
           ${users.map(u => {
             const s = u.statuses.get(p.id);
-            return `<td class="py-1 px-1 text-center"><span class="st st-${s.code}" title="${escapeHtml(userName(u.id))}：${s.text}">${s.label}</span></td>`;
+            const n = (u.history[p.id] || []).length;
+            const mark = `<span class="st st-${s.code}" title="${escapeHtml(userName(u.id))}：${s.text}">${s.label}</span>`;
+            // 過去の回答があるところは、おすと下に回答が出る
+            return `<td class="py-1 px-1 text-center whitespace-nowrap">${n
+              ? `<button type="button" class="ans-btn" data-user="${escapeHtml(u.id)}" data-pid="${escapeHtml(p.id)}" title="過去の回答を見る（${n}回）">${mark}<small>${n}回</small></button>`
+              : mark}</td>`;
           }).join("")}
           <td class="py-1 px-2 text-center text-slate-600">${doneBy} / ${users.length}</td>
         </tr>`;
@@ -318,6 +325,24 @@ function init() {
       Storage.deleteUser(id);
       renderRecords();
     }
+  });
+  $("matrix-body").addEventListener("click", e => {
+    const btn = e.target.closest(".ans-btn");
+    if (!btn) return;
+    const p = allProblems.find(x => x.id === btn.dataset.pid);
+    const list = Storage.loadHistory(btn.dataset.user)[p.id] || [];
+    const panel = $("answers-panel");
+    panel.innerHTML = `
+      <div class="flex items-center justify-between gap-2 mb-1">
+        <h3 class="text-sm font-bold text-slate-700">${escapeHtml(userName(btn.dataset.user))} さんの回答：${escapeHtml(p.unitLabel)} 問${numberInUnit.get(p.id)}「${escapeHtml(p.title)}」</h3>
+        <button type="button" id="answers-close" class="text-xs text-slate-500 hover:underline">閉じる</button>
+      </div>
+      <div class="text-xs text-slate-600 leading-relaxed">${p.statement}</div>
+      ${historyHtml(list)}`;
+    panel.classList.remove("hidden");
+    renderMath(panel);
+    $("answers-close").addEventListener("click", () => panel.classList.add("hidden"));
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
   });
   initProblemFilters();
   initPrintSelection();

@@ -89,6 +89,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
           証明で使う言葉
         </button>
+        <button type="button" id="btn-history" class="btn-ghost hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span id="btn-history-label">過去の回答</span>
+        </button>
       </div>
     </section>
 
@@ -232,6 +236,18 @@
     </div>
   </div>
 
+  <!-- 過去の回答 -->
+  <div id="history-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="history-title">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h2 id="history-title">過去の回答</h2>
+        <button type="button" id="btn-history-close" class="remove-btn" aria-label="閉じる">✕</button>
+      </div>
+      <p class="modal-lead">この問題で、前に正解したときの答えです。「もう一度とく」をおしても、ここには残ります。</p>
+      <div id="history-body"></div>
+    </div>
+  </div>
+
   <!-- 名前の登録 -->
   <div id="profile-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="profile-title">
     <div class="modal-sheet narrow">
@@ -243,6 +259,12 @@
       <div class="modal-actions">
         <button id="btn-profile-cancel" type="button" class="btn-ghost">やめる</button>
         <button id="btn-profile-save" type="button" class="btn-primary">決定</button>
+      </div>
+      <div class="retry-all">
+        <h3>すべての問題をもう一度とく</h3>
+        <p>書いた答えを全部の問題で空にして、最初からとき直せます。正解のしるし（✓）・今日の問題数・過去の回答は消えません。</p>
+        <button id="btn-retry-all" type="button" class="btn-ghost">すべての問題をもう一度とく</button>
+        <p id="retry-all-msg" class="hint mt-2" aria-live="polite"></p>
       </div>
     </div>
   </div>
