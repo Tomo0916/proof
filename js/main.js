@@ -63,7 +63,13 @@ const Sound = {
 // 定数・状態
 // ============================================================
 const CIRCLED = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"];
-const MAX_LINES = 6;     // ステップ1で書ける行数
+const MAX_LINES = 5;     // ステップ1で、1つのまとまり（仮定／隠れた条件）に書ける行数
+// ステップ1の2つのまとまり
+const STEP1_SECTIONS = [
+  { key: "given", title: "仮定", sub: "問題文に書いてあること" },
+  { key: "hidden", title: "隠れた条件", sub: "問題文には書いていないけれど、図や図形の性質からわかること（対頂角・共通な辺・平行線の角など）" }
+];
+const SECTION_TITLE = { given: "仮定", hidden: "隠れた条件" };
 const MAX_CHARS = 12;    // 1行に書ける文字数
 
 const state = {
@@ -73,7 +79,8 @@ const state = {
 
   // ステップ1
   step1: {
-    lines: [""],
+    lines: ["", ""],
+    secs: ["given", "hidden"],   // それぞれの行が「仮定」と「隠れた条件」のどちらか（仮定の行が先に並ぶ）
     active: 0,
     caret: 0,        // 入力している行の中のカーソルの位置（何文字目の前か）
     results: [],     // 答え合わせ後の各行の判定（lines と同じ並び。未判定は null）
@@ -301,6 +308,7 @@ function saveWork() {
   work.problemId = state.prob.id;
   work.problems[state.prob.id] = {
     lines: s.lines,
+    secs: s.secs,
     active: s.active,
     results: s.results,
     cleared: s.cleared,
@@ -316,9 +324,18 @@ function applySavedWork(saved) {
   if (Array.isArray(saved.lines) && saved.lines.length > 0) {
     s.lines = saved.lines.map(l => String(l).slice(0, MAX_CHARS)).slice(0, MAX_LINES);
     s.results = Array.isArray(saved.results) ? saved.results.slice(0, s.lines.length) : [];
+    s.cleared = Boolean(saved.cleared);
+    // どちらのまとまりの行か（前のしくみで保存した記録には無いので、正解の式から決める）
+    s.secs = Array.isArray(saved.secs) && saved.secs.length === s.lines.length
+      ? saved.secs.map(x => (x === "hidden" ? "hidden" : "given"))
+      : s.lines.map(l => {
+        const r = readEquality(l, state.prob);
+        const req = r.key && s.requiredKeys.find(k => k.key === r.key);
+        return req ? req.sec : "given";
+      });
+    normalizeSections();
     s.active = Math.min(Math.max(0, Number(saved.active) || 0), s.lines.length - 1);
     s.caret = s.lines[s.active].length;
-    s.cleared = Boolean(saved.cleared);
   }
   // カードの並び（問題データが変わってカードが合わないときは使わない）
   const byId = new Map(state.pieces.map(p => [p.id, p]));
@@ -386,7 +403,10 @@ function buildStep1Keys(prob) {
     return r.key ? r : null;
   };
   // 正解の式。左側が1つ目の三角形、右側が2つ目の三角形（データの書き方どおり）
-  const required = prob.proof.blocks.flatMap(b => b.equations).map(tex => read(texToPlain(tex))).filter(Boolean);
+  const required = prob.proof.blocks
+    .flatMap(b => b.equations.map(tex => ({ tex, sec: b.kind === "hidden" ? "hidden" : "given" })))
+    .map(({ tex, sec }) => { const r = read(texToPlain(tex)); return r ? { ...r, sec } : null; })
+    .filter(Boolean);
   const extra = (prob.extraTrue || []).map(read).filter(Boolean).map(r => r.key);
   return { required, extra };
 }
@@ -413,10 +433,11 @@ function loadProblem(index) {
 
   // ステップ1の準備
   const [t1, t2] = prob.triangles;
-  dom.step1Prompt.innerHTML = `$\\triangle ${t1}$ と $\\triangle ${t2}$ で、等しいとわかる辺や角を、記号を使ってすべて書き出しましょう。「=」の左に $\\triangle ${t1}$ の辺や角、右に $\\triangle ${t2}$ の辺や角を書きます。問題文に書いてあることだけでなく、図からわかることも探してみよう。`;
+  dom.step1Prompt.innerHTML = `$\\triangle ${t1}$ と $\\triangle ${t2}$ で、等しいとわかる辺や角を、記号を使ってすべて書き出しましょう。問題文に書いてある「仮定」と、図や図形の性質からわかる「隠れた条件」に分けて書きます。「=」の左に $\\triangle ${t1}$ の辺や角、右に $\\triangle ${t2}$ の辺や角を書きます。`;
   const keys = buildStep1Keys(prob);
   Object.assign(state.step1, {
-    lines: [""],
+    lines: ["", ""],
+    secs: ["given", "hidden"],
     active: 0,
     caret: 0,
     results: [],
@@ -466,7 +487,7 @@ function renderStep1() {
   const s = state.step1;
   const markSymbol = { ok: "○", ng: "×", extra: "△" };
 
-  dom.eqLines.innerHTML = s.lines.map((line, i) => {
+  const lineHtml = (line, i) => {
     const r = s.results ? s.results[i] : null;
     const isActive = i === s.active && !s.cleared;
     const caret = '<span class="eq-caret"></span>';
@@ -480,8 +501,17 @@ function renderStep1() {
         <span class="eq-bullet">・</span>
         <button type="button" class="eq-text" data-line="${i}" aria-label="${i + 1}行目" ${s.cleared ? "disabled" : ""}>${content}</button>
         ${r ? `<span class="eq-mark" aria-label="${r.mark === "ok" ? "正しい" : r.mark === "ng" ? "まちがい" : "使わない"}">${markSymbol[r.mark]}</span>` : ""}
-        ${!s.cleared && s.lines.length > 1 ? `<button type="button" class="eq-del" data-del="${i}" aria-label="${i + 1}行目を消す">✕</button>` : ""}
+        ${!s.cleared && countIn(s.secs[i]) > 1 ? `<button type="button" class="eq-del" data-del="${i}" aria-label="${i + 1}行目を消す">✕</button>` : ""}
         ${r && r.msg ? `<div class="eq-msg">${r.msg}</div>` : ""}
+      </div>`;
+  };
+  dom.eqLines.innerHTML = STEP1_SECTIONS.map(sec => {
+    const rows = s.lines.map((line, i) => (s.secs[i] === sec.key ? lineHtml(line, i) : "")).join("");
+    if (!rows) return "";
+    return `
+      <div class="eq-group" data-sec="${sec.key}">
+        <div class="eq-group-head"><span class="eq-group-title">${sec.title}</span><span class="eq-group-sub">${sec.sub}</span></div>
+        ${rows}
       </div>`;
   }).join("");
 
@@ -515,10 +545,11 @@ function backspace() {
   Sound.playClick();
   const line = s.lines[s.active];
   const c = Math.min(s.caret, line.length);
-  if (line === "" && s.lines.length > 1) {
+  if (line === "" && countIn(s.secs[s.active]) > 1) {
     // 空の行で押したら、その行を消して前の行の最後へ
     s.lines.splice(s.active, 1);
     s.results.splice(s.active, 1);
+    s.secs.splice(s.active, 1);
     s.active = Math.max(0, s.active - 1);
     s.caret = s.lines[s.active].length;
   } else if (c > 0) {
@@ -570,13 +601,15 @@ function newLine() {
   const s = state.step1;
   if (s.cleared) return;
   if (s.lines[s.active] === "") return;            // 空の行のままでは増やさない
-  if (s.lines.length >= MAX_LINES) {
+  const sec = s.secs[s.active];
+  if (countIn(sec) >= MAX_LINES) {
     Sound.playNotice();
     return;
   }
   Sound.playClick();
   s.lines.splice(s.active + 1, 0, "");
   s.results.splice(s.active + 1, 0, null);
+  s.secs.splice(s.active + 1, 0, sec);
   s.active += 1;
   s.caret = 0;
   onStep1Edited();
@@ -584,10 +617,11 @@ function newLine() {
 
 function deleteLine(i) {
   const s = state.step1;
-  if (s.cleared || s.lines.length <= 1) return;
+  if (s.cleared || countIn(s.secs[i]) <= 1) return;
   Sound.playClick();
   s.lines.splice(i, 1);
   s.results.splice(i, 1);
+  s.secs.splice(i, 1);
   if (s.active >= s.lines.length) s.active = s.lines.length - 1;
   else if (s.active > i) s.active -= 1;
   s.caret = s.lines[s.active].length;
@@ -622,27 +656,65 @@ function resetStep1() {
   const s = state.step1;
   if (s.cleared) return;
   Sound.playClick();
-  s.lines = [""];
+  s.lines = ["", ""];
+  s.secs = ["given", "hidden"];
   s.results = [];
   s.active = 0;
   s.caret = 0;
   onStep1Edited();
 }
 
+// そのまとまり（仮定／隠れた条件）の行の数
+function countIn(sec) {
+  return state.step1.secs.filter(x => x === sec).length;
+}
+
+// 行を「仮定 → 隠れた条件」の順に並べ、どちらのまとまりにも少なくとも1行あるようにする
+function normalizeSections() {
+  const s = state.step1;
+  const rows = s.lines.map((line, i) => ({ line, sec: s.secs[i] === "hidden" ? "hidden" : "given", result: s.results[i] || null }));
+  const order = rows.filter(x => x.sec === "given").concat(rows.filter(x => x.sec === "hidden"));
+  ["given", "hidden"].forEach(sec => {
+    if (!order.some(x => x.sec === sec)) {
+      const at = sec === "given" ? 0 : order.length;
+      order.splice(at, 0, { line: "", sec, result: null });
+    }
+  });
+  s.lines = order.map(x => x.line);
+  s.secs = order.map(x => x.sec);
+  s.results = order.map(x => x.result);
+}
+
+// まとまり sec の空いた行へ移る（なければ、そのまとまりの最後に行を足す）
+function goToEmptyLineIn(sec) {
+  const s = state.step1;
+  let next = s.lines.findIndex((l, i) => s.secs[i] === sec && l.trim() === "");
+  if (next === -1) {
+    if (countIn(sec) >= MAX_LINES) return false;
+    const last = s.secs.lastIndexOf(sec);
+    next = last + 1;
+    s.lines.splice(next, 0, "");
+    s.results.splice(next, 0, null);
+    s.secs.splice(next, 0, sec);
+  }
+  s.active = next;
+  s.caret = 0;
+  return true;
+}
+
 // 答え合わせで今の行が認められたら（○ か △）、自動で次の空いた行へ移る
-function moveToNextEmptyLine() {
+// そのまとまりの式がすべて見つかっていたら、もう1つのまとまりへ
+function moveToNextEmptyLine(found) {
   const s = state.step1;
   const r = s.results[s.active];
   if (!r || r.mark === "ng") return;          // × の行は直せるようにそのまま
-  let next = s.lines.findIndex(l => l.trim() === "");
-  if (next === -1) {
-    if (s.lines.length >= MAX_LINES) return;
-    s.lines.push("");
-    s.results.push(null);
-    next = s.lines.length - 1;
+  const sec = s.secs[s.active];
+  const other = sec === "given" ? "hidden" : "given";
+  const missingIn = x => s.requiredKeys.some(k => k.sec === x && !found.has(k.key));
+  if (!missingIn(sec) && missingIn(other)) {
+    if (goToEmptyLineIn(other)) return;
   }
-  s.active = next;
-  s.caret = s.lines[next].length;
+  goToEmptyLineIn(sec);
 }
 
 function checkStep1() {
@@ -656,12 +728,13 @@ function checkStep1() {
   }
 
   const found = new Set();
-  s.results = s.lines.map(line => {
+  s.results = s.lines.map((line, i) => {
     const r = readEquality(line, state.prob);
     if (r.empty) return null;
     if (r.error) return { mark: "ng", msg: r.error };
     if (found.has(r.key)) return { mark: "ng", msg: "同じことを2回書いています" };
     const req = s.requiredKeys.find(k => k.key === r.key);
+    const lineSec = s.secs[i];
     if (req) {
       // 左右の順番：左に1つ目の三角形、右に2つ目の三角形の辺・角（共通な辺・角は左右が同じなので対象外）
       if (r.left !== r.right && r.left !== req.left) {
@@ -670,6 +743,16 @@ function checkStep1() {
         return {
           mark: "ng",
           msg: `左右が逆です。「△${t1} と △${t2} において」なので、左に △${t1} の${what}、右に △${t2} の${what}を書きます`
+        };
+      }
+      // 仮定か、隠れた条件か
+      if (lineSec !== req.sec) {
+        return {
+          mark: "ng",
+          wrongSec: true,
+          msg: req.sec === "hidden"
+            ? "これは「隠れた条件」に書きます（問題文には書いていないけれど、図や図形の性質からわかることです）"
+            : "これは「仮定」に書きます（問題文に書いてあることです）"
         };
       }
       found.add(r.key);
@@ -682,6 +765,8 @@ function checkStep1() {
 
   const wrongCount = s.results.filter(r => r && r.mark === "ng").length;
   const missing = s.requiredKeys.filter(k => !found.has(k.key)).length;
+  const missingGiven = s.requiredKeys.filter(k => k.sec === "given" && !found.has(k.key)).length;
+  const missingHidden = s.requiredKeys.filter(k => k.sec === "hidden" && !found.has(k.key)).length;
 
   if (wrongCount === 0 && missing === 0) {
     s.cleared = true;
@@ -697,17 +782,24 @@ function checkStep1() {
   }
 
   Sound.playNotice();
-  moveToNextEmptyLine();
+  moveToNextEmptyLine(found);
   renderStep1();
   if (wrongCount > 0) {
     showFeedback(dom.step1Feedback, "error", feedbackHtml(
       "× のついた行を見直しましょう",
-      "書き方がちがうか、問題文や図からは言えないことが書かれています。行をタップすると書き直せます。"
+      s.results.every(r => !r || r.mark !== "ng" || r.wrongSec)
+        ? "式は合っていますが、書く場所がちがいます。消して、正しいほうのまとまりに書き直しましょう。"
+        : "書き方がちがうか、問題文や図からは言えないことが書かれています。行をタップすると書き直せます。"
     ));
   } else {
+    const parts = [];
+    if (missingGiven) parts.push(`仮定があと ${missingGiven} つ`);
+    if (missingHidden) parts.push(`隠れた条件があと ${missingHidden} つ`);
     showFeedback(dom.step1Feedback, "warning", feedbackHtml(
-      `あと ${missing} つあります`,
-      "問題文に書いてあることのほかに、図からわかること（対頂角、共通な辺、平行線の角など）も探してみよう。"
+      `${parts.join("、")}あります`,
+      missingHidden
+        ? "問題文をもう一度読み、図の中からも探してみよう（対頂角、共通な辺、平行線の角、図形の性質など）。"
+        : "問題文に書いてあることを、もう一度読んでみよう。"
     ));
   }
 }
@@ -726,8 +818,10 @@ function renderStepLock() {
 
   if (unlocked) {
     const s = state.step1;
-    const okLines = s.lines.filter((_, i) => s.results && s.results[i] && s.results[i].mark === "ok");
-    dom.step2Found.innerHTML = `ステップ1で見つけた等しい辺や角：<span class="font-semibold text-slate-800">${okLines.map(l => escapeHtml(formatPlain(l))).join("、 ")}</span>`;
+    const okIn = sec => s.lines.filter((l, i) => s.secs[i] === sec && s.results && s.results[i] && s.results[i].mark === "ok");
+    dom.step2Found.innerHTML = `ステップ1で見つけた等しい辺や角` + ["given", "hidden"]
+      .filter(sec => okIn(sec).length)
+      .map(sec => `<div>${SECTION_TITLE[sec]}：<span class="font-semibold text-slate-800">${okIn(sec).map(l => escapeHtml(formatPlain(l))).join("、 ")}</span></div>`).join("");
   }
 }
 
@@ -1045,7 +1139,7 @@ function feedbackContext() {
   return [
     `問題: ${p ? `${p.unitLabel}「${p.title}」(${p.id})` : "なし"}`,
     `進み具合: ${progress}`,
-    `ステップ1で書いた式: ${s.lines.filter(l => l.trim()).join(" / ") || "なし"}`,
+    `ステップ1で書いた式: ${s.lines.map((l, i) => (l.trim() ? `${SECTION_TITLE[s.secs[i]]}:${l}` : "")).filter(Boolean).join(" / ") || "なし"}`,
     `ステップ2の並び: ${state.answer.map(x => x.id).join(", ") || "なし"}`,
     `範囲・単元: ${dom.selectScope.value} / ${dom.selectUnit.value}`,
     `アプリの版: ${NEWS[0].id}`,

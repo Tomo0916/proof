@@ -54,6 +54,15 @@ const UNIT_PART = {
 };
 const partOf = unit => PARTS.find(pt => pt.key === (UNIT_PART[unit] || "figures"));
 
+/**
+ * ステップ1で「仮定」と「隠れた条件」に分けるための、理由の分類
+ *   given  仮定      … 問題文に書いてあること（中点・二等分線・正三角形など、言葉の意味からすぐわかることも含む）
+ *   hidden 隠れた条件 … 問題文には書いていないが、図や図形の性質からわかること
+ * 分類を変えたいときは、問題データの proof.blocks に kind: "given" / "hidden" と書くと、そちらが優先される。
+ */
+const HIDDEN_REASON = /対頂角|錯角|同位角|共通な|底角|向かい合う|対角線|正三角形の角|45\^\\circ|\+ \\angle|90\^\\circ - |180|[A-Z]+ - [A-Z]+/;
+export const reasonKind = reason => (HIDDEN_REASON.test(reason) ? "hidden" : "given");
+
 export const allProblems = [
   ...unit1Problems,
   ...unit2Problems,
@@ -70,4 +79,10 @@ export const allProblems = [
     stars: (p.level.match(/★/g) || []).length
   }))
   .sort((a, b) => (a.unit === b.unit ? a.adv - b.adv || a.stars - b.stars || a.i - b.i : a.i - b.i))
-  .map(x => prepareProblem({ ...x.p, tier: x.p.tier || "basic", part: partOf(x.p.unit).key, partLabel: partOf(x.p.unit).label }));
+  .map(x => prepareProblem({
+    ...x.p,
+    tier: x.p.tier || "basic",
+    part: partOf(x.p.unit).key,
+    partLabel: partOf(x.p.unit).label,
+    proof: { ...x.p.proof, blocks: x.p.proof.blocks.map(b => ({ ...b, kind: b.kind || reasonKind(b.reason) })) }
+  }));

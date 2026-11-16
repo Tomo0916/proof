@@ -7,6 +7,7 @@
   生徒が読むので、むずかしい言葉を使わずに書く（tag: new / improve / fix / teacher）。
 - 画面の言葉は中学生にわかる言い方にする（「型を判定」などの言い回しは使わない）。
 - 問題データの書き方は `js/problems/index.js` と `js/figure.js` の先頭にある。
+- ステップ1の「仮定」と「隠れた条件」の分け方は `js/problems/index.js` の `reasonKind`（問題データの `proof.blocks` に `kind` を書けばそちらが優先）。
 - 不具合・要望の送り先（Google フォーム）は `js/config.js` で設定する。
 
 ## ページ
