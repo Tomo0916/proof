@@ -75,6 +75,7 @@ const state = {
   step1: {
     lines: [""],
     active: 0,
+    caret: 0,        // 入力している行の中のカーソルの位置（何文字目の前か）
     results: [],     // 答え合わせ後の各行の判定（lines と同じ並び。未判定は null）
     cleared: false,
     requiredKeys: [],
@@ -316,6 +317,7 @@ function applySavedWork(saved) {
     s.lines = saved.lines.map(l => String(l).slice(0, MAX_CHARS)).slice(0, MAX_LINES);
     s.results = Array.isArray(saved.results) ? saved.results.slice(0, s.lines.length) : [];
     s.active = Math.min(Math.max(0, Number(saved.active) || 0), s.lines.length - 1);
+    s.caret = s.lines[s.active].length;
     s.cleared = Boolean(saved.cleared);
   }
   // カードの並び（問題データが変わってカードが合わないときは使わない）
@@ -416,6 +418,7 @@ function loadProblem(index) {
   Object.assign(state.step1, {
     lines: [""],
     active: 0,
+    caret: 0,
     results: [],
     cleared: false,
     requiredKeys: keys.required,
@@ -452,7 +455,9 @@ function renderKeypad() {
     ${letters}
     <button type="button" class="key key-sym" data-key="∠" aria-label="角の記号">∠</button>
     <button type="button" class="key key-sym" data-key="=" aria-label="イコール">=</button>
-    <button type="button" class="key key-fn" data-action="back" aria-label="1文字消す">⌫ 1字消す</button>
+    <button type="button" class="key key-move" data-action="left" aria-label="カーソルを左へ">◀</button>
+    <button type="button" class="key key-move" data-action="right" aria-label="カーソルを右へ">▶</button>
+    <button type="button" class="key key-fn" data-action="back" aria-label="カーソルの左の1文字を消す">⌫ 1字消す</button>
     <button type="button" class="key key-fn" data-action="newline" aria-label="次の行へ">↵ 次の行</button>
   `;
 }
@@ -464,13 +469,16 @@ function renderStep1() {
   dom.eqLines.innerHTML = s.lines.map((line, i) => {
     const r = s.results ? s.results[i] : null;
     const isActive = i === s.active && !s.cleared;
+    const caret = '<span class="eq-caret"></span>';
+    const chars = [...line].map((ch, pos) =>
+      `${isActive && pos === s.caret ? caret : ""}<span class="eq-ch" data-pos="${pos}">${escapeHtml(formatPlain(ch))}</span>`).join("");
     const content = line
-      ? escapeHtml(formatPlain(line))
-      : `<span class="eq-placeholder">${isActive ? "下のボタンで入力" : "（空らん）"}</span>`;
+      ? chars + (isActive && s.caret >= line.length ? caret : "")
+      : `<span class="eq-placeholder">${isActive ? "下のボタンで入力" : "（空らん）"}</span>${isActive ? caret : ""}`;
     return `
       <div class="eq-line ${isActive ? "is-active" : ""} ${r ? `mark-${r.mark}` : ""}">
         <span class="eq-bullet">・</span>
-        <button type="button" class="eq-text" data-line="${i}" aria-label="${i + 1}行目" ${s.cleared ? "disabled" : ""}>${content}${isActive ? '<span class="eq-caret"></span>' : ""}</button>
+        <button type="button" class="eq-text" data-line="${i}" aria-label="${i + 1}行目" ${s.cleared ? "disabled" : ""}>${content}</button>
         ${r ? `<span class="eq-mark" aria-label="${r.mark === "ok" ? "正しい" : r.mark === "ng" ? "まちがい" : "使わない"}">${markSymbol[r.mark]}</span>` : ""}
         ${!s.cleared && s.lines.length > 1 ? `<button type="button" class="eq-del" data-del="${i}" aria-label="${i + 1}行目を消す">✕</button>` : ""}
         ${r && r.msg ? `<div class="eq-msg">${r.msg}</div>` : ""}
@@ -491,9 +499,12 @@ function onStep1Edited() {
 function typeChar(ch) {
   const s = state.step1;
   if (s.cleared) return;
-  if (s.lines[s.active].length >= MAX_CHARS) return;
+  const line = s.lines[s.active];
+  if (line.length >= MAX_CHARS) return;
   Sound.playClick();
-  s.lines[s.active] += ch;
+  const c = Math.min(s.caret, line.length);
+  s.lines[s.active] = line.slice(0, c) + ch + line.slice(c);
+  s.caret = c + 1;
   s.results[s.active] = null;
   onStep1Edited();
 }
@@ -502,15 +513,57 @@ function backspace() {
   const s = state.step1;
   if (s.cleared) return;
   Sound.playClick();
-  if (s.lines[s.active] === "" && s.lines.length > 1) {
+  const line = s.lines[s.active];
+  const c = Math.min(s.caret, line.length);
+  if (line === "" && s.lines.length > 1) {
+    // 空の行で押したら、その行を消して前の行の最後へ
     s.lines.splice(s.active, 1);
     s.results.splice(s.active, 1);
     s.active = Math.max(0, s.active - 1);
-  } else {
-    s.lines[s.active] = s.lines[s.active].slice(0, -1);
+    s.caret = s.lines[s.active].length;
+  } else if (c > 0) {
+    s.lines[s.active] = line.slice(0, c - 1) + line.slice(c);
+    s.caret = c - 1;
     s.results[s.active] = null;
+  } else {
+    return;   // 行の先頭では何もしない
   }
   onStep1Edited();
+}
+
+// カーソルの右の1文字を消す（パソコンの Delete キー）
+function deleteForward() {
+  const s = state.step1;
+  if (s.cleared) return;
+  const line = s.lines[s.active];
+  const c = Math.min(s.caret, line.length);
+  if (c >= line.length) return;
+  Sound.playClick();
+  s.lines[s.active] = line.slice(0, c) + line.slice(c + 1);
+  s.results[s.active] = null;
+  onStep1Edited();
+}
+
+// カーソルを動かす（左右・行の先頭や最後）
+function moveCaret(to) {
+  const s = state.step1;
+  if (s.cleared) return;
+  const len = s.lines[s.active].length;
+  const next = Math.max(0, Math.min(len, to));
+  if (next === s.caret) return;
+  s.caret = next;
+  renderStep1();
+}
+
+// 上下の行へ（カーソルの位置はできるだけそのまま）
+function moveLine(delta) {
+  const s = state.step1;
+  if (s.cleared) return;
+  const i = s.active + delta;
+  if (i < 0 || i >= s.lines.length) return;
+  s.active = i;
+  s.caret = Math.min(s.caret, s.lines[i].length);
+  renderStep1();
 }
 
 function newLine() {
@@ -525,6 +578,7 @@ function newLine() {
   s.lines.splice(s.active + 1, 0, "");
   s.results.splice(s.active + 1, 0, null);
   s.active += 1;
+  s.caret = 0;
   onStep1Edited();
 }
 
@@ -536,14 +590,32 @@ function deleteLine(i) {
   s.results.splice(i, 1);
   if (s.active >= s.lines.length) s.active = s.lines.length - 1;
   else if (s.active > i) s.active -= 1;
+  s.caret = s.lines[s.active].length;
   onStep1Edited();
 }
 
-function selectLine(i) {
+// 行をタップしたとき。caret を渡すとその位置に、なければ行の最後にカーソルを置く
+function selectLine(i, caret) {
   const s = state.step1;
   if (s.cleared) return;
   s.active = i;
+  const len = s.lines[i].length;
+  s.caret = caret === undefined ? len : Math.max(0, Math.min(len, caret));
   renderStep1();
+}
+
+// タップした場所から、カーソルを置く位置を決める（文字の左半分なら前、右半分なら後ろ）
+function caretFromTap(e, lineEl) {
+  const ch = e.target.closest("[data-pos]");
+  if (ch) {
+    const r = ch.getBoundingClientRect();
+    const pos = Number(ch.dataset.pos);
+    return e.clientX < r.left + r.width / 2 ? pos : pos + 1;
+  }
+  // 文字のないところ：いちばん左の文字より左なら先頭、それ以外は最後
+  const first = lineEl.querySelector("[data-pos]");
+  if (first && e.clientX < first.getBoundingClientRect().left) return 0;
+  return undefined;
 }
 
 function resetStep1() {
@@ -553,6 +625,7 @@ function resetStep1() {
   s.lines = [""];
   s.results = [];
   s.active = 0;
+  s.caret = 0;
   onStep1Edited();
 }
 
@@ -569,6 +642,7 @@ function moveToNextEmptyLine() {
     next = s.lines.length - 1;
   }
   s.active = next;
+  s.caret = s.lines[next].length;
 }
 
 function checkStep1() {
@@ -1187,12 +1261,14 @@ function initEvents() {
     if (btn.dataset.key) typeChar(btn.dataset.key);
     else if (btn.dataset.action === "back") backspace();
     else if (btn.dataset.action === "newline") newLine();
+    else if (btn.dataset.action === "left") moveCaret(state.step1.caret - 1);
+    else if (btn.dataset.action === "right") moveCaret(state.step1.caret + 1);
   });
   dom.eqLines.addEventListener("click", e => {
     const del = e.target.closest("[data-del]");
     if (del) { deleteLine(Number(del.dataset.del)); return; }
     const line = e.target.closest("[data-line]");
-    if (line) selectLine(Number(line.dataset.line));
+    if (line) selectLine(Number(line.dataset.line), caretFromTap(e, line));
   });
   dom.btnStep1Reset.addEventListener("click", resetStep1);
   dom.btnStep1Check.addEventListener("click", checkStep1);
@@ -1210,6 +1286,13 @@ function initEvents() {
     else if (e.key === "=") { e.preventDefault(); typeChar("="); }
     else if (e.key === "<") { e.preventDefault(); typeChar("∠"); }
     else if (e.key === "Backspace") { e.preventDefault(); backspace(); }
+    else if (e.key === "Delete") { e.preventDefault(); deleteForward(); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); moveCaret(state.step1.caret - 1); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); moveCaret(state.step1.caret + 1); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); moveLine(-1); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); moveLine(1); }
+    else if (e.key === "Home") { e.preventDefault(); moveCaret(0); }
+    else if (e.key === "End") { e.preventDefault(); moveCaret(Infinity); }
     else if (e.key === "Enter" && !onOtherButton) { e.preventDefault(); newLine(); }
   });
 

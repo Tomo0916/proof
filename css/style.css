@@ -242,6 +242,8 @@ body {
 .key:active { transform: scale(0.95); background: var(--navy-soft); }
 .key-sym { color: var(--navy); background: var(--navy-faint); border-color: var(--navy-soft); }
 .key-fn { grid-column: span 2; font-family: var(--font); font-size: 13px; color: var(--ink-2); background: var(--ground); }
+.key-move { font-family: var(--font); font-size: 15px; color: var(--navy); background: var(--ground); }
+.eq-ch { white-space: pre; }
 
 /* ---------- ステップ2：証明（ノートの紙） ---------- */
 #drop-zone {
