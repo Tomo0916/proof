@@ -555,3 +555,6 @@ body.is-card-dragging, body.is-card-dragging * { cursor: grabbing !important; us
 .course-count { font-size: 11px; color: var(--muted); }
 .course-desc { font-size: 13px; color: var(--ink-2); margin-top: 12px; line-height: 1.7; }
 .course-desc + .lesson-list { margin-top: 10px; }
+
+/* 入門編のリスト：番号は自分でつけているので、ブラウザの番号は出さない */
+.lesson-list, .g-sections, .g-slots, .ip-proof { list-style: none; padding-left: 0; }

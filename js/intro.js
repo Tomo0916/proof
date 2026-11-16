@@ -91,9 +91,11 @@ const GIVEN_FIGURE = ["chuten", "nitoubun", "teikaku", "seisankaku", "heikou", "
 // 基本のコースでは、図形の性質（平行四辺形など）は選択肢に出さない
 const BASIC_CATS = ["katei", "taichokaku", "sakkaku", "doui", "kyotsuhen", "kyotsukaku", "chuten", "nitoubun"];
 
-function distractorCats(correctKey, n) {
+function distractorCats(correctKey, n, reason = "") {
   const inCourse = k => current.course !== "basic" || BASIC_CATS.includes(k);
-  const ok = k => k !== correctKey && inCourse(k) && !(GIVEN_FIGURE.includes(correctKey) && k === "katei");
+  // 理由の文が2つの種類にあてはまるとき（例：平行四辺形の辺の中点）は、もう一方も正しいと言えるので出さない
+  const alsoTrue = CATS.filter(c => c.re.test(reason)).map(c => c.key);
+  const ok = k => k !== correctKey && inCourse(k) && !alsoTrue.includes(k) && !(GIVEN_FIGURE.includes(correctKey) && k === "katei");
   const near = shuffle([...new Set(CONFUSE.filter(g => g.includes(correctKey)).flat())].filter(ok));
   const far = shuffle(CATS.map(c => c.key).filter(k => ok(k) && !near.includes(k)));
   return [...near.slice(0, 2), ...far].slice(0, n).map(k => CATS.find(c => c.key === k));
@@ -149,7 +151,11 @@ const REASON_POOL = BASIC.flatMap(p => p.proof.blocks
 
 function makeReasonQuestion() {
   const it = pick(REASON_POOL.filter(x => x.p.part === current.course));
-  const choices = shuffle([it.cat, ...distractorCats(it.cat.key, 3)]);
+  const choices = shuffle([it.cat, ...distractorCats(it.cat.key, 3, it.b.reason)]);
+  // 定期テストの問題のステップ1では、「仮定」と「隠れた条件」のどちらに書くか
+  const where = it.b.kind === "hidden"
+    ? "問題文には書いていないけれど、図や図形の性質からわかる「隠れた条件」です。"
+    : it.cat.key === "katei" ? "" : "問題文に書いてあることからわかるので、「仮定」のなかまです。";
   return {
     key: it.key,
     kind: "choice",
@@ -157,7 +163,7 @@ function makeReasonQuestion() {
     statement: it.p.statement,
     prompt: `図で印をつけた ${it.eq} が成り立つ理由は？`,
     choices: choices.map(c => ({ label: c.label, correct: c.key === it.cat.key })),
-    explain: `正解は「${it.cat.label}」です。証明では「${it.b.reason}」と書きます。`
+    explain: `正解は「${it.cat.label}」です。証明では「${it.b.reason}」と書きます。${where}`
   };
 }
 
@@ -303,7 +309,13 @@ function optionsFor(line, p) {
   if (line.type === "reason") {
     const used = p.proof.blocks.map(b => b.reason);
     const dummy = (p.dummies || []).filter(d => d.type === "reason").map(d => d.text);
-    const pool = shuffle([...new Set([...dummy, ...shuffle(OTHER_REASONS)])].filter(r => !used.includes(r)));
+    // 問題文に書いてあること（中点・正方形の辺など）が正解のときは、「仮定より、」も正しいと言えるので出さない
+    const block = p.proof.blocks[line.block];
+    const givenToo = block.kind === "given" && !/^仮定より/.test(line.text);
+    // 基本のコースでは、図形の性質（二等辺三角形など）は出さない
+    const figureOnly = r => current.course === "basic" && /二等辺三角形|正三角形|平行四辺形|長方形|ひし形|正方形/.test(r);
+    const pool = shuffle([...new Set([...dummy, ...shuffle(OTHER_REASONS)])]
+      .filter(r => !used.includes(r) && !(givenToo && /^仮定より/.test(r)) && !figureOnly(r)));
     return shuffle([line.text, ...pool.slice(0, 2)]);
   }
   if (line.type === "condition") {
