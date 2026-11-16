@@ -72,6 +72,24 @@ function readSide(str, problem) {
 }
 
 /**
+ * 辺の文字の順番が、頂点の対応どおりかを確かめる
+ * 例：△ABC と △DCB では B↔C、C↔B が対応するので、共通な辺は「BC = CB」と書く（「BC = BC」は×）
+ * 左側の2つの文字がどちらも1つ目の三角形の頂点のときだけ確かめる
+ * @returns {null | string} 順番がちがうときは、正しい右側（例: "CB"）
+ */
+export function segmentOrderFix(r, problem) {
+  if (!r || r.kind !== "segment" || !problem.triangles) return null;
+  const [t1, t2] = problem.triangles;
+  const map = {};
+  [...t1].forEach((c, i) => { map[c] = t2[i]; });
+  const mapped = [...r.leftRaw].map(c => map[c]);
+  if (!mapped.every(Boolean)) return null;
+  const want = mapped.join("");
+  if ([...want].sort().join("") !== [...r.rightRaw].sort().join("")) return null;
+  return want === r.rightRaw ? null : want;
+}
+
+/**
  * 1行分の式を読み取る
  * @returns {{empty:true} | {error:string} | {key:string, left:string, right:string, kind:string}}
  *   key は「同じ意味の式なら同じ文字列」になる比較用の値（左右の入れかえは区別しない）
@@ -95,6 +113,8 @@ export function readEquality(text, problem) {
   return {
     key: [left.key, right.key].sort().join("="),   // 左右を区別しない比較用
     left: left.key,                                  // 左側（1つ目の三角形の辺・角）
+    leftRaw: parts[0],                               // 書いたままの左側（文字の順番を確かめるのに使う）
+    rightRaw: parts[1],                              // 書いたままの右側
     right: right.key,                                // 右側（2つ目の三角形の辺・角）
     kind: left.kind                                  // "segment"（辺） / "angle"（角）
   };

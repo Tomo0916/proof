@@ -1,6 +1,6 @@
 import { allProblems, PARTS } from "./problems/index.js";
 import { Storage } from "./storage.js";
-import { readEquality, texToPlain, formatPlain } from "./notation.js";
+import { readEquality, segmentOrderFix, texToPlain, formatPlain } from "./notation.js";
 import { setupCardDrag } from "./drag.js";
 import { NEWS, TAG_LABEL } from "./news.js";
 import { phrasesHtml } from "./phrases.js";
@@ -743,6 +743,15 @@ function checkStep1() {
         return {
           mark: "ng",
           msg: `左右が逆です。「△${t1} と △${t2} において」なので、左に △${t1} の${what}、右に △${t2} の${what}を書きます`
+        };
+      }
+      // 辺の文字の順番：頂点の対応に合わせる（例：△ABC と △DCB なら BC = CB）
+      const fix = segmentOrderFix(r, state.prob);
+      if (fix) {
+        const [t1, t2] = state.prob.triangles;
+        return {
+          mark: "ng",
+          msg: `文字の順番を、頂点の対応に合わせます。△${t1} の ${[...r.leftRaw].join("、")} は、△${t2} の ${[...fix].join("、")} に対応するので、右は「${fix}」と書きます`
         };
       }
       // 仮定か、隠れた条件か
